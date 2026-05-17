@@ -30,7 +30,7 @@ async function checkAuth() {
 
     const { data: profile } = await sb
       .from("profiles")
-      .select("ativo")
+      .select("ativo, validade")
       .eq("id", session.user.id)
       .maybeSingle();
 
@@ -39,6 +39,9 @@ async function checkAuth() {
     } else if (!profile.ativo) {
       await sb.auth.signOut();
       showAuthScreen("Conta desativada. Entre em contato com o suporte.");
+      return;
+    } else if (profile.validade && new Date(profile.validade) < new Date()) {
+      showExpiredScreen();
       return;
     }
 
@@ -102,6 +105,14 @@ function setAuthMsg(msg, type) {
   el.textContent = msg;
   el.className = "status " + type;
   el.hidden = false;
+}
+
+function showExpiredScreen() {
+  document.querySelectorAll(".screen").forEach((s) => s.classList.add("hidden"));
+  document.getElementById("screen-expired").classList.remove("hidden");
+  document.getElementById("back-btn").classList.add("hidden");
+  document.getElementById("header-title").textContent = "Ferramenta Word";
+  sub("");
 }
 
 async function doLogout() {
