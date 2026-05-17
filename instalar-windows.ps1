@@ -2,9 +2,9 @@
 #  Ferramenta Word — Instalador para Windows
 # ─────────────────────────────────────────────
 
-$MANIFEST_URL = "https://leocorrea99.github.io/ferramenta-word/manifest.xml"
-$CATALOG_DIR  = "$env:APPDATA\FerramantaWord"
-$MANIFEST_PATH = "$CATALOG_DIR\ferramenta-word.xml"
+$MANIFEST_URL  = "https://leocorrea99.github.io/ferramenta-word/manifest.xml"
+$MANIFEST_DIR  = "$env:APPDATA\FerramantaWord"
+$MANIFEST_PATH = "$MANIFEST_DIR\ferramenta-word.xml"
 
 Clear-Host
 Write-Host ""
@@ -22,11 +22,10 @@ if ($wordProc) {
     Start-Sleep -Seconds 2
 }
 
-# Cria a pasta do catálogo
-New-Item -ItemType Directory -Force -Path $CATALOG_DIR | Out-Null
-
-# Baixa o manifest
+# Cria a pasta e baixa o manifest
 Write-Host "  → Baixando manifest..."
+New-Item -ItemType Directory -Force -Path $MANIFEST_DIR | Out-Null
+
 try {
     Invoke-WebRequest -Uri $MANIFEST_URL -OutFile $MANIFEST_PATH -UseBasicParsing
 } catch {
@@ -36,32 +35,42 @@ try {
     exit 1
 }
 
-# Registra a pasta como catálogo confiável no Word (via Registry)
+# Registra como Suplemento do Desenvolvedor (equivalente à pasta wef do Mac)
+# Isso faz o Word carregar automaticamente sem nenhuma etapa manual
+Write-Host "  → Registrando suplemento..."
+
+$devKey = "HKCU:\Software\Microsoft\Office\16.0\WEF\Developer"
+try {
+    New-Item -Path $devKey -Force | Out-Null
+    New-ItemProperty -Path $devKey -Name "FerramontaWord" -Value $MANIFEST_PATH -PropertyType String -Force | Out-Null
+} catch {
+    Write-Host "  Aviso: registro como desenvolvedor falhou, tentando método alternativo..." -ForegroundColor Yellow
+}
+
+# Método alternativo: catálogo confiável (fallback)
 $regBase = "HKCU:\Software\Microsoft\Office\16.0\WEF\TrustedCatalogs"
 $guid = [System.Guid]::NewGuid().ToString("B").ToUpper()
-
 try {
     New-Item -Path "$regBase\$guid" -Force | Out-Null
     Set-ItemProperty -Path "$regBase\$guid" -Name "Id"    -Value $guid
-    Set-ItemProperty -Path "$regBase\$guid" -Name "Url"   -Value $CATALOG_DIR
+    Set-ItemProperty -Path "$regBase\$guid" -Name "Url"   -Value $MANIFEST_DIR
     Set-ItemProperty -Path "$regBase\$guid" -Name "Flags" -Value 1 -Type DWord
-} catch {
-    Write-Host "  Aviso: não foi possível registrar automaticamente." -ForegroundColor Yellow
-    Write-Host "  Adicione manualmente em: Word → Opções → Central de Confiabilidade"
-    Write-Host "  → Catálogos de Suplementos Confiáveis → URL: $CATALOG_DIR"
-}
+} catch {}
 
 Write-Host ""
 Write-Host "  ✓  Instalado com sucesso!" -ForegroundColor Green
 Write-Host ""
-Write-Host "  Como abrir:"
-Write-Host "  Word → Inserir → Suplementos"
-Write-Host "  Aba ""Pasta Compartilhada"" → Ferramenta Word"
+Write-Host "  Abra o Word e acesse pelo menu:" -ForegroundColor White
+Write-Host "  Inserir → Suplementos → Suplementos do Desenvolvedor" -ForegroundColor Gray
+Write-Host "  (igual ao Mac)" -ForegroundColor Gray
 Write-Host ""
 
 $abrir = Read-Host "  Abrir o Word agora? (s/n)"
 if ($abrir -match "^[Ss]$") {
     Start-Process "WINWORD.EXE"
+    Write-Host ""
+    Write-Host "  Aguarde o Word abrir e procure a Ferramenta Word" -ForegroundColor Cyan
+    Write-Host "  em: Inserir → Suplementos → Suplementos do Desenvolvedor" -ForegroundColor Cyan
 }
 
 Write-Host ""
