@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ferramenta Word</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+    }
+
+    /* ── NAV ── */
+    nav {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      color: #1e293b;
+      text-decoration: none;
+    }
+    .nav-logo-icon {
+      background: #2563eb;
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .nav-badge {
+      background: #eff6ff;
+      color: #2563eb;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 60%, #3b82f6 100%);
+      color: white;
+      padding: 72px 24px 80px;
+      text-align: center;
+    }
+    .hero-tag {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      letter-spacing: 0.05em;
+    }
+    .hero h1 {
+      font-size: clamp(28px, 5vw, 48px);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 18px;
+      max-width: 640px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .hero p {
+      font-size: clamp(15px, 2vw, 18px);
+      color: #bfdbfe;
+      max-width: 520px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+    }
+    .hero-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: center;
+    }
+    .btn-download {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-download:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+    .btn-mac {
+      background: white;
+      color: #1e293b;
+    }
+    .btn-win {
+      background: rgba(255,255,255,0.12);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .btn-icon { font-size: 20px; }
+    .btn-text { display: flex; flex-direction: column; text-align: left; }
+    .btn-text small { font-size: 11px; font-weight: 400; opacity: 0.7; }
+
+    /* ── FEATURES ── */
+    .section {
+      padding: 72px 24px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #2563eb;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .section h2 {
+      font-size: clamp(22px, 3vw, 32px);
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 48px;
+      color: #0f172a;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 28px 24px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .feature-card:hover {
+      border-color: #93c5fd;
+      box-shadow: 0 4px 20px rgba(37,99,235,0.08);
+    }
+    .feature-emoji {
+      font-size: 32px;
+      margin-bottom: 14px;
+      display: block;
+    }
+    .feature-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #0f172a;
+    }
+    .feature-card p {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .how-section {
+      background: white;
+      border-top: 1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 32px;
+    }
+    .step {
+      text-align: center;
+    }
+    .step-num {
+      width: 40px;
+      height: 40px;
+      background: #eff6ff;
+      color: #2563eb;
+      font-size: 16px;
+      font-weight: 800;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 14px;
+    }
+    .step h3 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #0f172a;
+    }
+    .step p {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+      background: #0f172a;
+      color: white;
+      text-align: center;
+      padding: 72px 24px;
+    }
+    .cta-section h2 {
+      font-size: clamp(22px, 3vw, 32px);
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+    .cta-section p {
+      color: #94a3b8;
+      font-size: 15px;
+      margin-bottom: 36px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: #0f172a;
+      border-top: 1px solid #1e293b;
+      text-align: center;
+      padding: 24px;
+      color: #475569;
+      font-size: 12px;
+    }
+    footer a { color: #64748b; text-decoration: none; }
+    footer a:hover { color: #94a3b8; }
+
+    /* ── COMPAT BADGES ── */
+    .compat {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 32px;
+    }
+    .compat-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 12px;
+      color: #bfdbfe;
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-icon">W</div>
+    Ferramenta Word
+  </a>
+  <span class="nav-badge">Gratuito</span>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <span class="hero-tag">Suplemento para Microsoft Word</span>
+  <h1>Ferramentas profissionais para imagens no Word</h1>
+  <p>Adicione legendas, redimensione e formate imagens em segundos — diretamente no Word, sem fechar o documento.</p>
+
+  <div class="hero-btns">
+    <a class="btn-download btn-mac" href="instalar-mac.command" download>
+      <span class="btn-icon">&#63743;</span>
+      <span class="btn-text">
+        Baixar para Mac
+        <small>macOS · Microsoft Word</small>
+      </span>
+    </a>
+    <a class="btn-download btn-win" href="instalar-windows.ps1" download>
+      <span class="btn-icon">&#10064;</span>
+      <span class="btn-text">
+        Baixar para Windows
+        <small>Windows · Microsoft Word</small>
+      </span>
+    </a>
+  </div>
+
+  <div class="compat">
+    <span class="compat-badge">&#10003; macOS</span>
+    <span class="compat-badge">&#10003; Windows</span>
+    <span class="compat-badge">&#10003; Microsoft Word</span>
+    <span class="compat-badge">&#10003; Gratuito</span>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section">
+  <p class="section-label">Funcionalidades</p>
+  <h2>Tudo que você precisa em um só lugar</h2>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <span class="feature-emoji">&#127991;&#65039;</span>
+      <h3>Legendas</h3>
+      <p>Adicione legendas numeradas automaticamente em todas as imagens ou apenas nas selecionadas. Prefixo "Foto" ou "Figura", com texto adicional opcional.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-emoji">&#128208;</span>
+      <h3>Redimensionar</h3>
+      <p>Ajuste largura e altura em centímetros com precisão. Mantém a proporção ao preencher apenas um lado ou aplica dimensões exatas quando os dois são informados.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-emoji">&#182;</span>
+      <h3>Parágrafo</h3>
+      <p>Configure alinhamento, recuos, espaço antes e depois e espaçamento entre linhas para os parágrafos das imagens — tudo em uma só tela.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-emoji">&#8596;&#65039;</span>
+      <h3>Recuo</h3>
+      <p>Aplique recuo de primeira linha com valor configurável, ou remova todos os recuos. Funciona em todas as imagens ou apenas nas selecionadas.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section">
+  <div class="section">
+    <p class="section-label">Instalação</p>
+    <h2>Pronto em 3 passos</h2>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Baixe o instalador</h3>
+        <p>Escolha a versão para Mac ou Windows e baixe o arquivo de instalação.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Execute o arquivo</h3>
+        <p>No Mac, clique duas vezes no <strong>.command</strong>. No Windows, clique com o botão direito no <strong>.ps1</strong> e escolha "Executar com PowerShell".</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Abra no Word</h3>
+        <p>No Word, vá em <strong>Inserir → Suplementos → Suplementos do Desenvolvedor</strong> e clique em Ferramenta Word.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2>Comece agora, é gratuito</h2>
+  <p>Instale em segundos e ganhe tempo no seu próximo documento.</p>
+
+  <div class="hero-btns">
+    <a class="btn-download btn-mac" href="instalar-mac.command" download>
+      <span class="btn-icon">&#63743;</span>
+      <span class="btn-text">
+        Baixar para Mac
+        <small>macOS · Microsoft Word</small>
+      </span>
+    </a>
+    <a class="btn-download btn-win" href="instalar-windows.ps1" download>
+      <span class="btn-icon">&#10064;</span>
+      <span class="btn-text">
+        Baixar para Windows
+        <small>Windows · Microsoft Word</small>
+      </span>
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>Ferramenta Word &copy; 2025 &nbsp;·&nbsp; <a href="https://github.com/leocorrea99/ferramenta-word">GitHub</a></p>
+</footer>
+
+</body>
+</html>
