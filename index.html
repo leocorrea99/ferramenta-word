@@ -73,6 +73,19 @@
     .install-hint { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 6px; line-height: 1.5; display: flex; align-items: flex-start; gap: 5px; }
     .install-hint-dark { font-size: 11px; color: #94a3b8; margin-top: 6px; line-height: 1.5; display: flex; align-items: flex-start; gap: 5px; }
     .hint-icon { flex-shrink: 0; }
+    .mac-install-box { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 14px 16px; max-width: 340px; }
+    .mac-install-box-dark { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 14px 16px; max-width: 380px; }
+    .mac-install-label { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .mac-install-label-dark { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .mac-cmd-row { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 8px 10px; }
+    .mac-cmd-row-dark { display: flex; align-items: center; gap: 8px; background: #0f172a; border-radius: 6px; padding: 8px 10px; }
+    .mac-cmd-text { font-family: "SF Mono", "Fira Code", monospace; font-size: 10px; color: #86efac; flex: 1; word-break: break-all; }
+    .mac-cmd-copy { background: rgba(255,255,255,0.1); border: none; border-radius: 4px; padding: 4px 8px; font-size: 10px; font-weight: 600; color: white; cursor: pointer; white-space: nowrap; transition: background 0.15s; flex-shrink: 0; }
+    .mac-cmd-copy:hover { background: rgba(255,255,255,0.2); }
+    .mac-cmd-copy-dark { background: #334155; border: none; border-radius: 4px; padding: 4px 8px; font-size: 10px; font-weight: 600; color: #94a3b8; cursor: pointer; white-space: nowrap; transition: background 0.15s; flex-shrink: 0; }
+    .mac-cmd-copy-dark:hover { background: #475569; color: white; }
+    .mac-steps { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 8px; line-height: 1.6; }
+    .mac-steps-dark { font-size: 10px; color: #64748b; margin-top: 8px; line-height: 1.6; }
     .hero-visual { flex: 1; display: flex; justify-content: flex-end; align-items: center; position: relative; z-index: 2; }
 
     /* ── WORD WINDOW (hero mockup) ── */
@@ -254,19 +267,20 @@
     <h1>Ferramentas profissionais para <em>imagens</em> no Word</h1>
     <p class="hero-desc">Adicione legendas, redimensione e formate imagens em segundos — diretamente no Word, sem fechar o documento.</p>
     <div class="hero-ctas">
-      <div>
-        <a class="btn-hero btn-mac" href="instalar-mac.command" download>
-          <span class="btn-icon">&#63743;</span>
-          <span class="btn-txt">Baixar para Mac <small>macOS · Microsoft Word</small></span>
-        </a>
-        <p class="install-hint"><span class="hint-icon">ℹ️</span> Após baixar: clique com botão direito → Abrir → Abrir</p>
+      <div class="mac-install-box">
+        <div class="mac-install-label">&#63743; Mac — cole no Terminal</div>
+        <div class="mac-cmd-row">
+          <span class="mac-cmd-text" id="cmd-hero">bash &lt;(curl -sL https://leocorrea99.github.io/ferramenta-word/instalar-mac.command)</span>
+          <button class="mac-cmd-copy" onclick="copyCmd('cmd-hero', this)">Copiar</button>
+        </div>
+        <div class="mac-steps">1. Abra o Terminal (Cmd+Espaço → "Terminal")<br>2. Cole o comando acima e pressione Enter</div>
       </div>
       <div>
         <a class="btn-hero btn-win" href="instalar-windows.bat" download>
           <span class="btn-icon">&#10064;</span>
-          <span class="btn-txt">Baixar para Windows <small>Windows · Microsoft Word</small></span>
+          <span class="btn-txt">Baixar para Windows <small>Clique duas vezes para instalar</small></span>
         </a>
-        <p class="install-hint"><span class="hint-icon">ℹ️</span> Após baixar: clique duas vezes para instalar</p>
+        <p class="install-hint" style="max-width:260px"><span class="hint-icon">ℹ️</span> Se aparecer aviso do Windows: "Mais informações" → "Executar mesmo assim"</p>
       </div>
     </div>
   </div>
@@ -451,19 +465,20 @@
   <h2>Comece agora, é gratuito</h2>
   <p>Instale em segundos e ganhe tempo no seu próximo documento.</p>
   <div class="cta-btns">
-    <div>
-      <a class="btn-hero btn-mac" href="instalar-mac.command" download>
-        <span class="btn-icon">&#63743;</span>
-        <span class="btn-txt">Baixar para Mac <small>macOS · Microsoft Word</small></span>
-      </a>
-      <p class="install-hint-dark"><span class="hint-icon">ℹ️</span> Clique com botão direito → Abrir → Abrir</p>
+    <div class="mac-install-box-dark">
+      <div class="mac-install-label-dark">&#63743; Mac — cole no Terminal</div>
+      <div class="mac-cmd-row-dark">
+        <span class="mac-cmd-text" id="cmd-cta">bash &lt;(curl -sL https://leocorrea99.github.io/ferramenta-word/instalar-mac.command)</span>
+        <button class="mac-cmd-copy-dark" onclick="copyCmd('cmd-cta', this)">Copiar</button>
+      </div>
+      <div class="mac-steps-dark">1. Abra o Terminal (Cmd+Espaço → "Terminal")<br>2. Cole o comando acima e pressione Enter</div>
     </div>
     <div>
       <a class="btn-hero btn-win" href="instalar-windows.bat" download>
         <span class="btn-icon">&#10064;</span>
-        <span class="btn-txt">Baixar para Windows <small>Windows · Microsoft Word</small></span>
+        <span class="btn-txt">Baixar para Windows <small>Clique duas vezes para instalar</small></span>
       </a>
-      <p class="install-hint-dark"><span class="hint-icon">ℹ️</span> Clique duas vezes para instalar</p>
+      <p class="install-hint-dark" style="max-width:260px"><span class="hint-icon">ℹ️</span> Se aparecer aviso do Windows: "Mais informações" → "Executar mesmo assim"</p>
     </div>
   </div>
 </section>
@@ -474,6 +489,15 @@
 </footer>
 
 <script>
+  function copyCmd(id, btn) {
+    const text = document.getElementById(id).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = 'Copiado!';
+      setTimeout(() => btn.textContent = orig, 2000);
+    });
+  }
+
   const page = document.getElementById('demo-page');
   const all  = ['legendas','resize','paragrafo','recuo'];
 
