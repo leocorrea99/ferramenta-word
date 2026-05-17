@@ -1,0 +1,311 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, "Segoe UI", sans-serif;
+  font-size: 13px;
+  background: #f3f4f6;
+  color: #1e293b;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Header ────────────────────────────────────────────── */
+
+header {
+  background: #2563eb;
+  color: white;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.back-btn {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.back-btn:hover { background: rgba(255,255,255,0.25); }
+
+.header-text h1 {
+  font-size: 14px;
+  font-weight: 700;
+}
+.header-text p {
+  font-size: 10px;
+  color: #bfdbfe;
+  margin-top: 1px;
+}
+
+/* ── Screens ───────────────────────────────────────────── */
+
+.screen {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.hidden { display: none !important; }
+
+/* ── Doc bar ───────────────────────────────────────────── */
+
+.doc-bar {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.doc-icon { font-size: 15px; }
+.doc-name {
+  flex: 1;
+  font-weight: 500;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.badge {
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+/* ── Tool grid ─────────────────────────────────────────── */
+
+.tool-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.tool-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+  text-align: center;
+}
+.tool-card:hover {
+  border-color: #2563eb;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.15);
+  transform: translateY(-1px);
+}
+.tool-card:active { transform: translateY(0); }
+
+.tool-emoji {
+  font-size: 26px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+.tool-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e293b;
+}
+.tool-desc {
+  font-size: 10px;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+/* ── Cards ─────────────────────────────────────────────── */
+
+.card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #64748b;
+  padding-top: 4px;
+}
+.card-title:first-child { padding-top: 0; }
+
+/* ── Form elements ─────────────────────────────────────── */
+
+.radio-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+.radio {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.radio input { cursor: pointer; accent-color: #2563eb; }
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+}
+input[type="number"],
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px;
+  background: #f9fafb;
+  width: 100%;
+}
+input[type="number"]:focus,
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+  outline: none;
+  border-color: #2563eb;
+  background: white;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.hint {
+  font-size: 11px;
+  color: #64748b;
+  font-style: italic;
+}
+
+.optional {
+  font-size: 9px;
+  font-weight: 500;
+  color: #94a3b8;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 4px;
+}
+
+/* ── Auth ──────────────────────────────────────────────── */
+
+.auth-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-desc {
+  font-size: 12px;
+  color: #64748b;
+  text-align: center;
+}
+
+.auth-tabs {
+  display: flex;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 7px;
+  border: none;
+  background: white;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.auth-tab.active { background: #2563eb; color: white; }
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-logout {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 4px;
+  text-align: center;
+  margin-top: auto;
+}
+.btn-logout:hover { color: #64748b; text-decoration: underline; }
+
+/* ── Buttons ───────────────────────────────────────────── */
+
+.btn {
+  padding: 9px;
+  border: none;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  width: 100%;
+}
+.btn-primary { background: #2563eb; color: white; }
+.btn-primary:hover:not(:disabled) { background: #1d4ed8; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Status ────────────────────────────────────────────── */
+
+.status {
+  border-radius: 5px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.status[hidden] { display: none; }
+.status.info    { background: #eff6ff; color: #1d4ed8; }
+.status.success { background: #f0fdf4; color: #15803d; }
+.status.warn    { background: #fffbeb; color: #b45309; }
+.status.error   { background: #fef2f2; color: #b91c1c; }

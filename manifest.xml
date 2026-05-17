@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:type="TaskPaneApp">
+
+  <Id>3d7b4e2a-1c8f-4d2e-9a5b-6c3f7d8e4b2a</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Nova Ferramenta</ProviderName>
+  <DefaultLocale>pt-BR</DefaultLocale>
+  <DisplayName DefaultValue="Ferramenta Word"/>
+  <Description DefaultValue="Ferramentas para imagens em documentos Word"/>
+  <IconUrl DefaultValue="https://leocorrea99.github.io/ferramenta-word/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://leocorrea99.github.io/ferramenta-word/icon-80.png"/>
+
+  <AppDomains>
+    <AppDomain>leocorrea99.github.io</AppDomain>
+    <AppDomain>supabase.co</AppDomain>
+  </AppDomains>
+
+  <Hosts>
+    <Host Name="Document"/>
+  </Hosts>
+
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://leocorrea99.github.io/ferramenta-word/taskpane.html"/>
+  </DefaultSettings>
+
+  <Permissions>ReadWriteDocument</Permissions>
+
+</OfficeApp>

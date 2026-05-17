@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ferramenta Word</title>
+  <link rel="stylesheet" href="taskpane.css" />
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+</head>
+<body>
+
+<header>
+  <button id="back-btn" class="back-btn hidden" onclick="showHome()">&#8592; Voltar</button>
+  <div class="header-text">
+    <h1 id="header-title">Ferramenta Word</h1>
+    <p id="header-sub">Carregando...</p>
+  </div>
+</header>
+
+<!-- ── Auth ──────────────────────────────────────────────── -->
+<div id="screen-auth" class="screen hidden">
+  <div class="auth-card">
+    <p class="auth-desc">Entre com sua conta para usar a ferramenta.</p>
+
+    <div class="auth-tabs">
+      <button id="tab-login" class="auth-tab active" onclick="switchTab('login')">Entrar</button>
+      <button id="tab-register" class="auth-tab" onclick="switchTab('register')">Cadastrar</button>
+    </div>
+
+    <div id="form-login" class="auth-form">
+      <div class="field">
+        <label for="login-email">E-mail</label>
+        <input type="email" id="login-email" placeholder="seu@email.com">
+      </div>
+      <div class="field">
+        <label for="login-pass">Senha</label>
+        <input type="password" id="login-pass" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary" id="btn-login" onclick="doLogin()">Entrar</button>
+    </div>
+
+    <div id="form-register" class="auth-form hidden">
+      <div class="field">
+        <label for="reg-email">E-mail</label>
+        <input type="email" id="reg-email" placeholder="seu@email.com">
+      </div>
+      <div class="field">
+        <label for="reg-pass">Senha</label>
+        <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres">
+      </div>
+      <button class="btn btn-primary" id="btn-register" onclick="doRegister()">Criar conta</button>
+    </div>
+
+    <div id="auth-msg" class="status" hidden></div>
+  </div>
+</div>
+
+<!-- ── Home ─────────────────────────────────────────── -->
+<div id="screen-home" class="screen hidden">
+
+  <div class="doc-bar">
+    <span class="doc-icon">&#128196;</span>
+    <span id="doc-name" class="doc-name">—</span>
+    <span id="img-badge" class="badge" hidden></span>
+  </div>
+
+  <div class="tool-grid">
+
+    <button class="tool-card" onclick="showScreen('legendas')">
+      <span class="tool-emoji">&#127991;&#65039;</span>
+      <span class="tool-label">Legendas</span>
+      <span class="tool-desc">Adicionar legendas às imagens</span>
+    </button>
+
+    <button class="tool-card" onclick="showScreen('redimensionar')">
+      <span class="tool-emoji">&#128208;</span>
+      <span class="tool-label">Redimensionar</span>
+      <span class="tool-desc">Ajustar largura e altura</span>
+    </button>
+
+    <button class="tool-card" onclick="showScreen('paragrafo')">
+      <span class="tool-emoji">&#182;</span>
+      <span class="tool-label">Parágrafo</span>
+      <span class="tool-desc">Espaçamento e alinhamento</span>
+    </button>
+
+    <button class="tool-card" onclick="showScreen('recuo')">
+      <span class="tool-emoji">&#8596;&#65039;</span>
+      <span class="tool-label">Recuo</span>
+      <span class="tool-desc">Recuo de primeira linha</span>
+    </button>
+
+  </div>
+
+  <button class="btn-logout" onclick="doLogout()">Sair da conta</button>
+</div>
+
+<!-- ── Legendas ──────────────────────────────────────── -->
+<div id="screen-legendas" class="screen hidden">
+  <div class="card">
+    <div class="card-title">Prefixo</div>
+    <div class="radio-row">
+      <label class="radio"><input type="radio" name="leg-prefix" value="Foto" checked> Foto</label>
+      <label class="radio"><input type="radio" name="leg-prefix" value="Figura"> Figura</label>
+    </div>
+
+    <div class="card-title">Alinhamento</div>
+    <div class="radio-row wrap">
+      <label class="radio"><input type="radio" name="leg-align" value="left"> Esquerda</label>
+      <label class="radio"><input type="radio" name="leg-align" value="centered" checked> Centro</label>
+      <label class="radio"><input type="radio" name="leg-align" value="right"> Direita</label>
+      <label class="radio"><input type="radio" name="leg-align" value="justified"> Justificado</label>
+    </div>
+
+    <div class="card-title">Texto adicional <span class="optional">opcional</span></div>
+    <input type="text" id="leg-texto" placeholder="ex: Painéis solares na cobertura">
+    <p class="hint">Resultado: Foto 1 - [seu texto]</p>
+
+    <div class="card-title">Aplicar em</div>
+    <div class="radio-row">
+      <label class="radio"><input type="radio" name="leg-scope" value="all" checked> Todas</label>
+      <label class="radio"><input type="radio" name="leg-scope" value="selected"> Selecionadas</label>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="runLegendas()">Adicionar Legendas</button>
+  <div id="status-legendas" class="status" hidden></div>
+</div>
+
+<!-- ── Redimensionar ─────────────────────────────────── -->
+<div id="screen-redimensionar" class="screen hidden">
+  <div class="card">
+    <div class="two-col">
+      <div class="field">
+        <label for="resize-w">Largura (cm)</label>
+        <input type="number" id="resize-w" placeholder="ex: 14" min="0" step="0.1">
+      </div>
+      <div class="field">
+        <label for="resize-h">Altura (cm)</label>
+        <input type="number" id="resize-h" placeholder="ex: 10" min="0" step="0.1">
+      </div>
+    </div>
+    <p class="hint">Preencha só um campo para manter a proporção.</p>
+
+    <div class="card-title">Aplicar em</div>
+    <div class="radio-row">
+      <label class="radio"><input type="radio" name="resize-scope" value="all" checked> Todas</label>
+      <label class="radio"><input type="radio" name="resize-scope" value="selected"> Selecionadas</label>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="runRedimensionar()">Redimensionar</button>
+  <div id="status-redimensionar" class="status" hidden></div>
+</div>
+
+<!-- ── Parágrafo ─────────────────────────────────────── -->
+<div id="screen-paragrafo" class="screen hidden">
+  <div class="card">
+    <div class="card-title">Alinhamento</div>
+    <div class="radio-row wrap">
+      <label class="radio"><input type="radio" name="par-align" value="" checked> Manter</label>
+      <label class="radio"><input type="radio" name="par-align" value="left"> Esquerda</label>
+      <label class="radio"><input type="radio" name="par-align" value="centered"> Centro</label>
+      <label class="radio"><input type="radio" name="par-align" value="right"> Direita</label>
+      <label class="radio"><input type="radio" name="par-align" value="justified"> Justificado</label>
+    </div>
+
+    <div class="two-col">
+      <div class="field">
+        <label for="par-ind-l">Recuo esq. (cm)</label>
+        <input type="number" id="par-ind-l" placeholder="0" min="0" step="0.1">
+      </div>
+      <div class="field">
+        <label for="par-ind-r">Recuo dir. (cm)</label>
+        <input type="number" id="par-ind-r" placeholder="0" min="0" step="0.1">
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="field">
+        <label for="par-sp-bef">Espaço antes (cm)</label>
+        <input type="number" id="par-sp-bef" placeholder="0" min="0" step="0.1">
+      </div>
+      <div class="field">
+        <label for="par-sp-aft">Espaço depois (cm)</label>
+        <input type="number" id="par-sp-aft" placeholder="0" min="0" step="0.1">
+      </div>
+    </div>
+
+    <div class="card-title">Espaçamento entre linhas</div>
+    <div class="radio-row">
+      <label class="radio"><input type="radio" name="par-ls" value="single" checked> Simples</label>
+      <label class="radio"><input type="radio" name="par-ls" value="1.5"> 1,5 linhas</label>
+    </div>
+
+    <div class="card-title">Aplicar em</div>
+    <div class="radio-row">
+      <label class="radio"><input type="radio" name="par-scope" value="all" checked> Todas</label>
+      <label class="radio"><input type="radio" name="par-scope" value="selected"> Selecionadas</label>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="runParagrafo()">Aplicar Configurações</button>
+  <div id="status-paragrafo" class="status" hidden></div>
+</div>
+
+<!-- ── Recuo ─────────────────────────────────────────── -->
+<div id="screen-recuo" class="screen hidden">
+  <div class="card">
+    <div class="card-title">Tipo de recuo</div>
+    <div class="radio-row">
+      <label class="radio"><input type="radio" name="rec-type" value="first" checked onchange="toggleRecuoVal(true)"> Primeira linha</label>
+      <label class="radio"><input type="radio" name="rec-type" value="none" onchange="toggleRecuoVal(false)"> Sem recuo</label>
+    </div>
+
+    <div class="field" id="rec-val-field">
+      <label for="rec-val">Valor (cm)</label>
+      <input type="number" id="rec-val" value="1.25" min="0" step="0.05">
+    </div>
+
+    <div class="card-title">Aplicar em</div>
+    <div class="radio-row">
+      <label class="radio"><input type="radio" name="rec-scope" value="all" checked> Todas</label>
+      <label class="radio"><input type="radio" name="rec-scope" value="selected"> Selecionadas</label>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="runRecuo()">Aplicar Recuo</button>
+  <div id="status-recuo" class="status" hidden></div>
+</div>
+
+<script src="taskpane.js"></script>
+</body>
+</html>
