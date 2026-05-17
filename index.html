@@ -55,7 +55,7 @@
     .hero h1 { font-size: 46px; font-weight: 900; line-height: 1.08; color: white; letter-spacing: -0.025em; margin-bottom: 18px; }
     .hero h1 em { font-style: normal; color: #60a5fa; }
     .hero-desc { font-size: 16px; color: #94a3b8; line-height: 1.65; margin-bottom: 36px; max-width: 350px; }
-    .hero-ctas { display: flex; flex-wrap: wrap; gap: 12px; }
+    .hero-ctas { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
     .btn-hero {
       display: flex; align-items: center; gap: 10px;
       padding: 13px 22px; border-radius: 10px;
@@ -70,6 +70,9 @@
     .btn-icon { font-size: 20px; }
     .btn-txt { display: flex; flex-direction: column; text-align: left; }
     .btn-txt small { font-size: 10px; font-weight: 400; opacity: 0.55; }
+    .install-hint { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 6px; line-height: 1.5; display: flex; align-items: flex-start; gap: 5px; }
+    .install-hint-dark { font-size: 11px; color: #94a3b8; margin-top: 6px; line-height: 1.5; display: flex; align-items: flex-start; gap: 5px; }
+    .hint-icon { flex-shrink: 0; }
     .hero-visual { flex: 1; display: flex; justify-content: flex-end; align-items: center; position: relative; z-index: 2; }
 
     /* ── WORD WINDOW (hero mockup) ── */
@@ -251,14 +254,20 @@
     <h1>Ferramentas profissionais para <em>imagens</em> no Word</h1>
     <p class="hero-desc">Adicione legendas, redimensione e formate imagens em segundos — diretamente no Word, sem fechar o documento.</p>
     <div class="hero-ctas">
-      <a class="btn-hero btn-mac" href="instalar-mac.command" download>
-        <span class="btn-icon">&#63743;</span>
-        <span class="btn-txt">Baixar para Mac <small>macOS · Microsoft Word</small></span>
-      </a>
-      <a class="btn-hero btn-win" href="instalar-windows.ps1" download>
-        <span class="btn-icon">&#10064;</span>
-        <span class="btn-txt">Baixar para Windows <small>Windows · Microsoft Word</small></span>
-      </a>
+      <div>
+        <a class="btn-hero btn-mac" href="instalar-mac.command" download>
+          <span class="btn-icon">&#63743;</span>
+          <span class="btn-txt">Baixar para Mac <small>macOS · Microsoft Word</small></span>
+        </a>
+        <p class="install-hint"><span class="hint-icon">ℹ️</span> Após baixar: clique com botão direito → Abrir → Abrir</p>
+      </div>
+      <div>
+        <a class="btn-hero btn-win" href="instalar-windows.bat" download>
+          <span class="btn-icon">&#10064;</span>
+          <span class="btn-txt">Baixar para Windows <small>Windows · Microsoft Word</small></span>
+        </a>
+        <p class="install-hint"><span class="hint-icon">ℹ️</span> Após baixar: clique duas vezes para instalar</p>
+      </div>
     </div>
   </div>
 
@@ -426,8 +435,8 @@
     </div>
     <div class="step">
       <div class="step-n">2</div>
-      <h3>Execute o arquivo</h3>
-      <p>Mac: clique duas vezes no <strong>.command</strong>. Windows: botão direito no <strong>.ps1</strong> → "Executar com PowerShell".</p>
+      <h3>Execute o instalador</h3>
+      <p><strong>Mac:</strong> botão direito no arquivo → Abrir → Abrir.<br><strong>Windows:</strong> clique duas vezes no arquivo <strong>.bat</strong>.</p>
     </div>
     <div class="step">
       <div class="step-n">3</div>
@@ -442,14 +451,20 @@
   <h2>Comece agora, é gratuito</h2>
   <p>Instale em segundos e ganhe tempo no seu próximo documento.</p>
   <div class="cta-btns">
-    <a class="btn-hero btn-mac" href="instalar-mac.command" download>
-      <span class="btn-icon">&#63743;</span>
-      <span class="btn-txt">Baixar para Mac <small>macOS · Microsoft Word</small></span>
-    </a>
-    <a class="btn-hero btn-win" href="instalar-windows.ps1" download>
-      <span class="btn-icon">&#10064;</span>
-      <span class="btn-txt">Baixar para Windows <small>Windows · Microsoft Word</small></span>
-    </a>
+    <div>
+      <a class="btn-hero btn-mac" href="instalar-mac.command" download>
+        <span class="btn-icon">&#63743;</span>
+        <span class="btn-txt">Baixar para Mac <small>macOS · Microsoft Word</small></span>
+      </a>
+      <p class="install-hint-dark"><span class="hint-icon">ℹ️</span> Clique com botão direito → Abrir → Abrir</p>
+    </div>
+    <div>
+      <a class="btn-hero btn-win" href="instalar-windows.bat" download>
+        <span class="btn-icon">&#10064;</span>
+        <span class="btn-txt">Baixar para Windows <small>Windows · Microsoft Word</small></span>
+      </a>
+      <p class="install-hint-dark"><span class="hint-icon">ℹ️</span> Clique duas vezes para instalar</p>
+    </div>
   </div>
 </section>
 
