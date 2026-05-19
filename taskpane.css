@@ -310,6 +310,129 @@ input[type="password"]:focus {
 .status.warn    { background: #fffbeb; color: #b45309; }
 .status.error   { background: #fef2f2; color: #b91c1c; }
 
+/* ── Chat IA ───────────────────────────────────────────── */
+
+.tool-card-ai {
+  border-color: #7c3aed;
+}
+.tool-card-ai:hover {
+  border-color: #6d28d9;
+  box-shadow: 0 2px 8px rgba(124,58,237,0.18);
+}
+
+.screen-chat {
+  padding: 8px;
+  gap: 6px;
+}
+
+.chat-history {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 2px;
+}
+
+.chat-msg {
+  max-width: 88%;
+  padding: 8px 11px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.chat-msg-user {
+  background: #2563eb;
+  color: white;
+  align-self: flex-end;
+  border-bottom-right-radius: 3px;
+}
+
+.chat-msg-assistant {
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+  align-self: flex-start;
+  border-bottom-left-radius: 3px;
+}
+
+.chat-msg-thinking {
+  background: #f1f5f9;
+  color: #94a3b8;
+  align-self: flex-start;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 18px;
+  letter-spacing: 3px;
+}
+
+.chat-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn-context {
+  flex: 1;
+  padding: 6px 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.btn-context:hover { background: #f1f5f9; }
+
+.btn-insert {
+  border-color: #7c3aed;
+  color: #7c3aed;
+}
+.btn-insert:hover { background: #faf5ff; }
+
+.chat-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.chat-input {
+  flex: 1;
+  resize: none;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: inherit;
+  line-height: 1.4;
+  background: white;
+}
+.chat-input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.btn-send {
+  width: 36px;
+  height: 36px;
+  background: #2563eb;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.btn-send:hover:not(:disabled) { background: #1d4ed8; }
+.btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
 /* ── Assinatura expirada ───────────────────────────────── */
 
 .expired-card {

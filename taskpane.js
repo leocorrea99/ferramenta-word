@@ -128,6 +128,7 @@ const TITLES = {
   redimensionar: "Redimensionar",
   paragrafo:     "Parágrafo",
   recuo:         "Recuo",
+  chat:          "Chat IA",
 };
 
 function showScreen(name) {
@@ -318,6 +319,125 @@ async function runRecuo() {
     return `${n} imagem(ns) com recuo aplicado.`;
   });
 }
+
+// ── Chat IA ───────────────────────────────────────────────────────────────────
+
+const CHAT_SYSTEM = "Você é um assistente especializado em documentos Word e escrita acadêmica/profissional em português brasileiro. Seja direto e útil.";
+
+let chatMessages = [];
+let chatLastReply = "";
+
+function openChat() {
+  chatMessages = [];
+  chatLastReply = "";
+  document.getElementById("chat-history").innerHTML = "";
+  document.getElementById("btn-insert-reply").classList.add("hidden");
+  document.getElementById("chat-input").value = "";
+  showScreen("chat");
+}
+
+function chatAppend(role, text) {
+  const history = document.getElementById("chat-history");
+  const div = document.createElement("div");
+  div.className = "chat-msg chat-msg-" + role;
+  div.textContent = text;
+  history.appendChild(div);
+  history.scrollTop = history.scrollHeight;
+}
+
+async function chatSend() {
+  const input = document.getElementById("chat-input");
+  const text  = input.value.trim();
+  if (!text) return;
+
+  const btn = document.getElementById("btn-send");
+  input.value = "";
+  btn.disabled = true;
+
+  chatAppend("user", text);
+  chatMessages.push({ role: "user", content: text });
+
+  const thinking = document.createElement("div");
+  thinking.className = "chat-msg chat-msg-thinking";
+  thinking.textContent = "...";
+  document.getElementById("chat-history").appendChild(thinking);
+
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(CHAT_FUNCTION_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + session.access_token,
+      },
+      body: JSON.stringify({
+        messages: [{ role: "system", content: CHAT_SYSTEM }, ...chatMessages],
+      }),
+    });
+
+    const data = await res.json();
+    thinking.remove();
+
+    if (!res.ok) throw new Error(data.error || "Erro na API");
+
+    const reply = data.choices[0].message.content;
+    chatMessages.push({ role: "assistant", content: reply });
+    chatLastReply = reply;
+    chatAppend("assistant", reply);
+    document.getElementById("btn-insert-reply").classList.remove("hidden");
+  } catch (e) {
+    thinking.remove();
+    chatAppend("assistant", "Erro: " + e.message);
+  } finally {
+    btn.disabled = false;
+    input.focus();
+  }
+}
+
+async function chatUseSelection() {
+  try {
+    let selected = "";
+    await Word.run(async (context) => {
+      const sel = context.document.getSelection();
+      sel.load("text");
+      await context.sync();
+      selected = sel.text.trim();
+    });
+
+    if (!selected) {
+      chatAppend("assistant", "Nenhum texto selecionado no Word. Selecione um trecho e tente novamente.");
+      return;
+    }
+
+    const input = document.getElementById("chat-input");
+    const prefix = "Texto selecionado no documento:\n\"\"\"\n" + selected + "\n\"\"\"\n\n";
+    input.value = prefix;
+    input.focus();
+    input.setSelectionRange(prefix.length, prefix.length);
+  } catch {
+    chatAppend("assistant", "Não foi possível ler a seleção do Word.");
+  }
+}
+
+async function chatInsertReply() {
+  if (!chatLastReply) return;
+  try {
+    await Word.run(async (context) => {
+      const sel = context.document.getSelection();
+      sel.insertText(chatLastReply, "End");
+      await context.sync();
+    });
+  } catch {
+    chatAppend("assistant", "Não foi possível inserir o texto no Word.");
+  }
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.target.id === "chat-input" && e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    chatSend();
+  }
+});
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
 

@@ -92,6 +92,12 @@
       <span class="tool-desc">Recuo de primeira linha</span>
     </button>
 
+    <button class="tool-card tool-card-ai" onclick="openChat()">
+      <span class="tool-emoji">&#129302;</span>
+      <span class="tool-label">Chat IA</span>
+      <span class="tool-desc">Assistente com GPT-4o</span>
+    </button>
+
   </div>
 
   <button class="btn-logout" onclick="doLogout()">Sair da conta</button>
@@ -229,6 +235,27 @@
 
   <button class="btn btn-primary" onclick="runRecuo()">Aplicar Recuo</button>
   <div id="status-recuo" class="status" hidden></div>
+</div>
+
+<!-- ── Chat IA ─────────────────────────────────────────── -->
+<div id="screen-chat" class="screen screen-chat hidden">
+
+  <div id="chat-history" class="chat-history"></div>
+
+  <div class="chat-actions">
+    <button class="btn-context" onclick="chatUseSelection()" title="Enviar texto selecionado no Word como contexto">
+      &#128196; Usar seleção do Word
+    </button>
+    <button id="btn-insert-reply" class="btn-context btn-insert hidden" onclick="chatInsertReply()" title="Inserir última resposta no documento">
+      &#10515; Inserir no Word
+    </button>
+  </div>
+
+  <div class="chat-input-row">
+    <textarea id="chat-input" class="chat-input" rows="2" placeholder="Digite sua mensagem..."></textarea>
+    <button id="btn-send" class="btn-send" onclick="chatSend()">&#9658;</button>
+  </div>
+
 </div>
 
 <!-- ── Assinatura expirada ────────────────────────────── -->
