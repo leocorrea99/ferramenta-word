@@ -178,20 +178,20 @@ async function runLegendas() {
     const n = pics.items.length;
     if (n === 0) throw new Error("Nenhuma imagem encontrada.");
 
-    // Load the paragraph immediately after each picture to detect existing captions
     const nextParas = pics.items.map(pic => pic.paragraph.getNextOrNullObject());
     nextParas.forEach(p => p.load("text"));
     await context.sync();
 
+    const jcMap = { left: "left", centered: "center", right: "right", justified: "both" };
+    const jc = jcMap[align] || "center";
+
     let added = 0;
     for (let i = n - 1; i >= 0; i--) {
       const next = nextParas[i];
-      if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) {
-        continue; // already has a caption
+      if (!next.isNullObject && /^(Foto|Figura)\s*\d/.test(next.text.trim())) {
+        continue;
       }
-      const label = texto ? `${prefix} ${i + 1} - ${texto}` : `${prefix} ${i + 1}`;
-      const para = pics.items[i].getRange().insertParagraph(label, "After");
-      if (align) para.alignment = align;
+      pics.items[i].paragraph.insertOoxml(buildCaptionOoxml(prefix, jc, texto), "After");
       added++;
     }
     await context.sync();
@@ -202,6 +202,34 @@ async function runLegendas() {
       ? `${added} legenda(s) adicionada(s) (${skipped} já tinham).`
       : `${added} legenda(s) adicionada(s).`;
   });
+}
+
+function xmlEsc(str) {
+  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function buildCaptionOoxml(prefix, jc, texto) {
+  const suffixPart = texto
+    ? `<w:r><w:t xml:space="preserve"> - ${xmlEsc(texto)}</w:t></w:r>`
+    : "";
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p>
+      <w:pPr>
+        <w:pStyle w:val="Caption"/>
+        <w:jc w:val="${jc}"/>
+      </w:pPr>
+      <w:r><w:t xml:space="preserve">${xmlEsc(prefix)} </w:t></w:r>
+      <w:r><w:fldChar w:fldCharType="begin"/></w:r>
+      <w:r><w:instrText xml:space="preserve"> SEQ ${xmlEsc(prefix)} \\* ARABIC </w:instrText></w:r>
+      <w:r><w:fldChar w:fldCharType="separate"/></w:r>
+      <w:r><w:t>1</w:t></w:r>
+      <w:r><w:fldChar w:fldCharType="end"/></w:r>
+      ${suffixPart}
+    </w:p>
+  </w:body>
+</w:document>`;
 }
 
 // ── Tool: Redimensionar ───────────────────────────────────────────────────────
