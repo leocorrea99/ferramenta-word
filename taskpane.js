@@ -185,18 +185,28 @@ async function runLegendas() {
     const jcMap = { left: "left", centered: "center", right: "right", justified: "both" };
     const jc = jcMap[align] || "center";
 
-    let added = 0;
+    // ── Passo 1: insere parágrafos vazios com estilo Caption (via API nativa) ──
+    const placeholders = [];
     for (let i = n - 1; i >= 0; i--) {
       const next = nextParas[i];
-      if (!next.isNullObject && /^(Foto|Figura)\s*\d/.test(next.text.trim())) {
-        continue;
-      }
-      pics.items[i].paragraph.insertOoxml(buildCaptionOoxml(prefix, jc, texto), "After");
-      added++;
+      if (!next.isNullObject && /^(Foto|Figura)\s*\d/.test(next.text.trim())) continue;
+      const ph = pics.items[i].paragraph.insertParagraph("", "After");
+      ph.styleBuiltIn = Word.StyleBuiltIn.caption;
+      placeholders.push(ph);
+    }
+
+    if (placeholders.length === 0) return "Todas as imagens já têm legenda.";
+    await context.sync();
+
+    // ── Passo 2: insere OOXML com campo SEQ antes de cada placeholder e deleta ──
+    const ooxml = buildCaptionOoxml(prefix, jc, texto);
+    for (const ph of placeholders) {
+      ph.getRange("Start").insertOoxml(ooxml, "Before");
+      ph.delete();
     }
     await context.sync();
 
-    if (added === 0) return "Todas as imagens já têm legenda.";
+    const added = placeholders.length;
     const skipped = n - added;
     return skipped > 0
       ? `${added} legenda(s) adicionada(s) (${skipped} já tinham).`
