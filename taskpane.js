@@ -28,19 +28,8 @@ async function checkAuth() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) { showAuthScreen(); return; }
 
-    const { data: profile } = await sb
-      .from("profiles")
-      .select("ativo, validade")
-      .eq("id", session.user.id)
-      .maybeSingle();
-
-    if (!profile) {
-      await sb.from("profiles").insert({ id: session.user.id, email: session.user.email, ativo: true });
-    } else if (!profile.ativo) {
-      await sb.auth.signOut();
-      showAuthScreen("Conta desativada. Entre em contato com o suporte.");
-      return;
-    } else if (profile.validade && new Date(profile.validade) < new Date()) {
+    const { data: hasSub } = await sb.rpc("current_user_has_subscription");
+    if (hasSub === false) {
       showExpiredScreen();
       return;
     }
