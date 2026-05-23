@@ -175,54 +175,11 @@ async function loadDocInfo() {
 
 // ── Tool: Legendas ────────────────────────────────────────────────────────────
 
-function xmlEsc(str) {
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
-function buildCaptionOoxml(prefix, jc, extraText) {
-  const extraRun = extraText
-    ? `<w:r><w:t xml:space="preserve"> - ${xmlEsc(extraText)}</w:t></w:r>`
-    : "";
-  const jcProp = jc ? `<w:jc w:val="${jc}"/>` : "";
-  return `<pkg:package xmlns:pkg="http://schemas.microsoft.com/office/2006/xmlPackage">
-  <pkg:part pkg:name="/_rels/.rels" pkg:contentType="application/vnd.openxmlformats-package.relationships+xml" pkg:padding="512">
-    <pkg:xmlData>
-      <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-        <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
-      </Relationships>
-    </pkg:xmlData>
-  </pkg:part>
-  <pkg:part pkg:name="/word/document.xml" pkg:contentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml">
-    <pkg:xmlData>
-      <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-        <w:body>
-          <w:p>
-            <w:pPr>
-              <w:pStyle w:val="Caption"/>${jcProp}
-            </w:pPr>
-            <w:r><w:t xml:space="preserve">${xmlEsc(prefix)} </w:t></w:r>
-            <w:r><w:fldChar w:fldCharType="begin"/></w:r>
-            <w:r><w:instrText xml:space="preserve"> SEQ ${xmlEsc(prefix)} \\* ARABIC </w:instrText></w:r>
-            <w:r><w:fldChar w:fldCharType="separate"/></w:r>
-            <w:r><w:t>1</w:t></w:r>
-            <w:r><w:fldChar w:fldCharType="end"/></w:r>
-            ${extraRun}
-          </w:p>
-        </w:body>
-      </w:document>
-    </pkg:xmlData>
-  </pkg:part>
-</pkg:package>`;
-}
-
 async function runLegendas() {
   const prefix = radio("leg-prefix");
   const align  = radio("leg-align");
   const scope  = radio("leg-scope");
   const texto  = document.getElementById("leg-texto").value.trim();
-
-  const alignMap = { left: "left", centered: "center", right: "right", justified: "both" };
-  const jc = alignMap[align] || "center";
 
   await runTool("legendas", async (context) => {
     const pics = getPics(context, scope);
@@ -232,6 +189,7 @@ async function runLegendas() {
     const n = pics.items.length;
     if (n === 0) throw new Error("Nenhuma imagem encontrada.");
 
+    // Load the paragraph immediately after each picture to detect existing captions
     const nextParas = pics.items.map(pic => pic.paragraph.getNextOrNullObject());
     nextParas.forEach(p => p.load("text"));
     await context.sync();
@@ -240,20 +198,20 @@ async function runLegendas() {
     for (let i = n - 1; i >= 0; i--) {
       const next = nextParas[i];
       if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) {
-        continue; // já tem legenda
+        continue; // already has a caption
       }
-      const ooxml = buildCaptionOoxml(prefix, jc, texto);
-      pics.items[i].paragraph.getRange("Whole").insertOoxml(ooxml, "After");
+      const label = texto ? `${prefix} ${i + 1} - ${texto}` : `${prefix} ${i + 1}`;
+      const para = pics.items[i].getRange().insertParagraph(label, "After");
+      if (align) para.alignment = align;
       added++;
     }
     await context.sync();
 
     if (added === 0) return "Todas as imagens já têm legenda.";
     const skipped = n - added;
-    const dica = " Pressione Ctrl+A → F9 para atualizar a numeração.";
     return skipped > 0
-      ? `${added} legenda(s) adicionada(s) (${skipped} já tinham).${dica}`
-      : `${added} legenda(s) adicionada(s).${dica}`;
+      ? `${added} legenda(s) adicionada(s) (${skipped} já tinham).`
+      : `${added} legenda(s) adicionada(s).`;
   });
 }
 
