@@ -243,7 +243,7 @@ async function runLegendas() {
         continue; // já tem legenda
       }
       const ooxml = buildCaptionOoxml(prefix, jc, texto);
-      pics.items[i].getRange().insertOoxml(ooxml, "After");
+      pics.items[i].paragraph.getRange("Whole").insertOoxml(ooxml, "After");
       added++;
     }
     await context.sync();
