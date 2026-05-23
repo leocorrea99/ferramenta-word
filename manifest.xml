@@ -6,10 +6,10 @@
 
   <Id>3d7b4e2a-1c8f-4d2e-9a5b-6c3f7d8e4b2a</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>Nova Ferramenta</ProviderName>
+  <ProviderName>LaudoBot</ProviderName>
   <DefaultLocale>pt-BR</DefaultLocale>
-  <DisplayName DefaultValue="Ferramenta Word"/>
-  <Description DefaultValue="Ferramentas para imagens em documentos Word"/>
+  <DisplayName DefaultValue="LaudoBot"/>
+  <Description DefaultValue="Ferramentas para laudos técnicos no Word"/>
   <IconUrl DefaultValue="https://leocorrea99.github.io/ferramenta-word/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://leocorrea99.github.io/ferramenta-word/icon-80.png"/>
 

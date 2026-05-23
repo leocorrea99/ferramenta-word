@@ -45,7 +45,7 @@ function showAuthScreen(msg) {
   document.querySelectorAll(".screen").forEach((s) => s.classList.add("hidden"));
   document.getElementById("screen-auth").classList.remove("hidden");
   document.getElementById("back-btn").classList.add("hidden");
-  document.getElementById("header-title").textContent = "Ferramenta Word";
+  document.getElementById("header-title").textContent = "LaudoBot";
   sub("");
   const el = document.getElementById("auth-msg");
   if (msg) { el.textContent = msg; el.className = "status error"; el.hidden = false; }
@@ -100,7 +100,7 @@ function showExpiredScreen() {
   document.querySelectorAll(".screen").forEach((s) => s.classList.add("hidden"));
   document.getElementById("screen-expired").classList.remove("hidden");
   document.getElementById("back-btn").classList.add("hidden");
-  document.getElementById("header-title").textContent = "Ferramenta Word";
+  document.getElementById("header-title").textContent = "LaudoBot";
   sub("");
 }
 
@@ -112,7 +112,7 @@ async function doLogout() {
 // ── Navigation ────────────────────────────────────────────────────────────────
 
 const TITLES = {
-  home:          "Ferramenta Word",
+  home:          "LaudoBot",
   legendas:      "Legendas",
   redimensionar: "Redimensionar",
   paragrafo:     "Parágrafo",
