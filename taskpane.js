@@ -642,10 +642,18 @@ async function runEstiloLegendaLab() {
         return;
       }
 
-      targets.forEach(p => { p.style = "Caption"; });
-      await context.sync();
+      // Tenta "Caption" (Word EN) e, se falhar, "Legenda" (Word PT)
+      let styleName = "Caption";
+      try {
+        targets.forEach(p => { p.style = "Caption"; });
+        await context.sync();
+      } catch {
+        styleName = "Legenda";
+        targets.forEach(p => { p.style = "Legenda"; });
+        await context.sync();
+      }
 
-      statusEl.textContent = `✓ Estilo Caption aplicado em ${targets.length} legenda(s).`;
+      statusEl.textContent = `✓ Estilo "${styleName}" aplicado em ${targets.length} legenda(s).`;
       statusEl.className = "status success";
     });
   } catch (e) {
