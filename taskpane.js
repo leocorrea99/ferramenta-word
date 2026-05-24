@@ -118,7 +118,6 @@ const TITLES = {
   paragrafo:     "Parágrafo",
   recuo:         "Recuo",
   chat:          "Chat IA",
-  lab:           "🔬 Lab",
 };
 
 function showScreen(name) {
@@ -133,21 +132,6 @@ function showHome() {
   loadDocInfo();
 }
 
-// ── Lab secret menu (5 taps on title) ────────────────────────────────────────
-
-let _labTaps = 0, _labTimer = null;
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("header-title").addEventListener("click", () => {
-    _labTaps++;
-    clearTimeout(_labTimer);
-    if (_labTaps >= 5) {
-      _labTaps = 0;
-      showScreen("lab");
-    } else {
-      _labTimer = setTimeout(() => { _labTaps = 0; }, 1500);
-    }
-  });
-});
 
 function toggleRecuoVal(show) {
   document.getElementById("rec-val-field").style.display = show ? "" : "none";
@@ -186,6 +170,8 @@ async function runLegendas() {
   const align  = radio("leg-align");
   const scope  = radio("leg-scope");
   const texto  = document.getElementById("leg-texto").value.trim();
+  const jcMap  = { left: "left", centered: "center", right: "right", justified: "both" };
+  const jc     = jcMap[align] || "center";
 
   await runTool("legendas", async (context) => {
     const pics = getPics(context, scope);
@@ -202,21 +188,18 @@ async function runLegendas() {
     let added = 0;
     for (let i = n - 1; i >= 0; i--) {
       const next = nextParas[i];
-      if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) {
-        continue;
-      }
-      const label = texto ? `${prefix} ${i + 1} - ${texto}` : `${prefix} ${i + 1}`;
-      const para = pics.items[i].getRange().insertParagraph(label, "After");
-      if (align) para.alignment = align;
+      if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) continue;
+      pics.items[i].getRange().insertOoxml(buildPkgOoxml(prefix, jc, texto), "After");
       added++;
     }
     await context.sync();
 
     if (added === 0) return "Todas as imagens já têm legenda.";
     const skipped = n - added;
-    return skipped > 0
+    const msg = skipped > 0
       ? `${added} legenda(s) adicionada(s) (${skipped} já tinham).`
       : `${added} legenda(s) adicionada(s).`;
+    return msg + " Pressione F9 para atualizar a numeração.";
   });
 }
 
@@ -492,24 +475,8 @@ function sub(text) {
   document.getElementById("header-sub").textContent = text;
 }
 
-// ── Lab: helpers ──────────────────────────────────────────────────────────────
-
 function xmlEsc(str) {
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
-function setLabStatus(n, msg, type) {
-  const el = document.getElementById("lab-status-" + n);
-  el.textContent = msg;
-  el.className = "status " + type;
-  el.hidden = false;
-}
-
-function labInputs() {
-  const prefix = document.querySelector('input[name="lab-prefix"]:checked')?.value || "Foto";
-  const scope  = document.querySelector('input[name="lab-scope"]:checked')?.value  || "all";
-  const texto  = document.getElementById("lab-texto").value.trim();
-  return { prefix, scope, texto };
 }
 
 // pkg:package OOXML com estilo Caption + campo SEQ (versões e4ae5c5 / 69def05)
@@ -542,242 +509,5 @@ function buildPkgOoxml(prefix, jc, texto) {
     </pkg:xmlData>
   </pkg:part>
 </pkg:package>`;
-}
-
-// w:document OOXML com ou sem estilo Caption + campo SEQ
-function buildDocOoxml(prefix, jc, texto, withCaption) {
-  const suffix = texto ? `<w:r><w:t xml:space="preserve"> - ${xmlEsc(texto)}</w:t></w:r>` : "";
-  const styleEl = withCaption ? `<w:pStyle w:val="Caption"/>` : "";
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-  <w:body>
-    <w:p>
-      <w:pPr>${styleEl}<w:jc w:val="${jc}"/></w:pPr>
-      <w:r><w:t xml:space="preserve">${xmlEsc(prefix)} </w:t></w:r>
-      <w:r><w:fldChar w:fldCharType="begin"/></w:r>
-      <w:r><w:instrText xml:space="preserve"> SEQ ${xmlEsc(prefix)} \\* ARABIC </w:instrText></w:r>
-      <w:r><w:fldChar w:fldCharType="separate"/></w:r>
-      <w:r><w:t>1</w:t></w:r>
-      <w:r><w:fldChar w:fldCharType="end"/></w:r>
-      ${suffix}
-    </w:p>
-  </w:body>
-</w:document>`;
-}
-
-// ── Lab: V1 — insertParagraph texto simples ───────────────────────────────────
-
-async function runLabV1() {
-  setLabStatus(1, "Processando...", "info");
-  const { prefix, scope, texto } = labInputs();
-  try {
-    await Word.run(async (context) => {
-      const pics = getPics(context, scope);
-      pics.load("items");
-      await context.sync();
-      const n = pics.items.length;
-      if (n === 0) throw new Error("Nenhuma imagem encontrada.");
-      const nextParas = pics.items.map(p => p.paragraph.getNextOrNullObject());
-      nextParas.forEach(p => p.load("text"));
-      await context.sync();
-      let added = 0;
-      for (let i = n - 1; i >= 0; i--) {
-        const next = nextParas[i];
-        if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) continue;
-        const label = texto ? `${prefix} ${i + 1} - ${texto}` : `${prefix} ${i + 1}`;
-        pics.items[i].getRange().insertParagraph(label, "After");
-        added++;
-      }
-      await context.sync();
-      if (added === 0) { setLabStatus(1, "Todas já têm legenda.", "warn"); return; }
-      setLabStatus(1, `✓ ${added} legenda(s) inserida(s).`, "success");
-    });
-  } catch (e) { setLabStatus(1, "Erro: " + e.message, "error"); }
-}
-
-// ── Lab: V2 — pkg:package + getRange().insertOoxml("After") ──────────────────
-
-async function runLabV2() {
-  setLabStatus(2, "Processando...", "info");
-  const { prefix, scope, texto } = labInputs();
-  try {
-    await Word.run(async (context) => {
-      const pics = getPics(context, scope);
-      pics.load("items");
-      await context.sync();
-      const n = pics.items.length;
-      if (n === 0) throw new Error("Nenhuma imagem encontrada.");
-      const nextParas = pics.items.map(p => p.paragraph.getNextOrNullObject());
-      nextParas.forEach(p => p.load("text"));
-      await context.sync();
-      let added = 0;
-      for (let i = n - 1; i >= 0; i--) {
-        const next = nextParas[i];
-        if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) continue;
-        const ooxml = buildPkgOoxml(prefix, "center", texto);
-        pics.items[i].getRange().insertOoxml(ooxml, "After");
-        added++;
-      }
-      await context.sync();
-      if (added === 0) { setLabStatus(2, "Todas já têm legenda.", "warn"); return; }
-      setLabStatus(2, `✓ ${added} legenda(s). F9 para atualizar numeração.`, "success");
-    });
-  } catch (e) { setLabStatus(2, "Erro: " + e.message, "error"); }
-}
-
-// ── Lab: V3 — pkg:package + paragraph.getRange("Whole").insertOoxml("After") ─
-
-async function runLabV3() {
-  setLabStatus(3, "Processando...", "info");
-  const { prefix, scope, texto } = labInputs();
-  try {
-    await Word.run(async (context) => {
-      const pics = getPics(context, scope);
-      pics.load("items");
-      await context.sync();
-      const n = pics.items.length;
-      if (n === 0) throw new Error("Nenhuma imagem encontrada.");
-      const nextParas = pics.items.map(p => p.paragraph.getNextOrNullObject());
-      nextParas.forEach(p => p.load("text"));
-      await context.sync();
-      let added = 0;
-      for (let i = n - 1; i >= 0; i--) {
-        const next = nextParas[i];
-        if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) continue;
-        const ooxml = buildPkgOoxml(prefix, "center", texto);
-        pics.items[i].paragraph.getRange("Whole").insertOoxml(ooxml, "After");
-        added++;
-      }
-      await context.sync();
-      if (added === 0) { setLabStatus(3, "Todas já têm legenda.", "warn"); return; }
-      setLabStatus(3, `✓ ${added} legenda(s). F9 para atualizar numeração.`, "success");
-    });
-  } catch (e) { setLabStatus(3, "Erro: " + e.message, "error"); }
-}
-
-// ── Lab: V4 — w:document COM Caption + paragraph.insertOoxml("After") ─────────
-
-async function runLabV4() {
-  setLabStatus(4, "Processando...", "info");
-  const { prefix, scope, texto } = labInputs();
-  try {
-    await Word.run(async (context) => {
-      const pics = getPics(context, scope);
-      pics.load("items");
-      await context.sync();
-      const n = pics.items.length;
-      if (n === 0) throw new Error("Nenhuma imagem encontrada.");
-      const nextParas = pics.items.map(p => p.paragraph.getNextOrNullObject());
-      nextParas.forEach(p => p.load("text"));
-      await context.sync();
-      const ooxml = buildDocOoxml(prefix, "center", texto, true);
-      let added = 0;
-      for (let i = n - 1; i >= 0; i--) {
-        const next = nextParas[i];
-        if (!next.isNullObject && /^(Foto|Figura)\s*\d/.test(next.text.trim())) continue;
-        pics.items[i].paragraph.insertOoxml(ooxml, "After");
-        added++;
-      }
-      await context.sync();
-      if (added === 0) { setLabStatus(4, "Todas já têm legenda.", "warn"); return; }
-      setLabStatus(4, `✓ ${added} legenda(s). F9 para atualizar numeração.`, "success");
-    });
-  } catch (e) { setLabStatus(4, "Erro: " + e.message, "error"); }
-}
-
-// ── Lab: V5 — 2 passos: insertParagraph style Caption + insertOoxml Before ────
-
-async function runLabV5() {
-  setLabStatus(5, "Processando...", "info");
-  const { prefix, scope, texto } = labInputs();
-  try {
-    await Word.run(async (context) => {
-      const pics = getPics(context, scope);
-      pics.load("items");
-      await context.sync();
-      const n = pics.items.length;
-      if (n === 0) throw new Error("Nenhuma imagem encontrada.");
-      const nextParas = pics.items.map(p => p.paragraph.getNextOrNullObject());
-      nextParas.forEach(p => p.load("text"));
-      await context.sync();
-      const placeholders = [];
-      for (let i = n - 1; i >= 0; i--) {
-        const next = nextParas[i];
-        if (!next.isNullObject && /^(Foto|Figura)\s*\d/.test(next.text.trim())) continue;
-        const ph = pics.items[i].paragraph.insertParagraph("", "After");
-        ph.style = "Caption";
-        placeholders.push(ph);
-      }
-      if (placeholders.length === 0) { setLabStatus(5, "Todas já têm legenda.", "warn"); return; }
-      await context.sync();
-      const ooxml = buildDocOoxml(prefix, "center", texto, true);
-      for (const ph of placeholders) {
-        ph.getRange("Start").insertOoxml(ooxml, "Before");
-        ph.delete();
-      }
-      await context.sync();
-      setLabStatus(5, `✓ ${placeholders.length} legenda(s). F9 para atualizar numeração.`, "success");
-    });
-  } catch (e) { setLabStatus(5, "Erro: " + e.message, "error"); }
-}
-
-// ── Lab: V6 — w:document COM Caption + paragraph.getRange("After").insertOoxml("Replace") ─
-
-async function runLabV6() {
-  setLabStatus(6, "Processando...", "info");
-  const { prefix, scope, texto } = labInputs();
-  try {
-    await Word.run(async (context) => {
-      const pics = getPics(context, scope);
-      pics.load("items");
-      await context.sync();
-      const n = pics.items.length;
-      if (n === 0) throw new Error("Nenhuma imagem encontrada.");
-      const nextParas = pics.items.map(p => p.paragraph.getNextOrNullObject());
-      nextParas.forEach(p => p.load("text"));
-      await context.sync();
-      const ooxml = buildDocOoxml(prefix, "center", texto, true);
-      let added = 0;
-      for (let i = n - 1; i >= 0; i--) {
-        const next = nextParas[i];
-        if (!next.isNullObject && /^(Foto|Figura)\s*\d/.test(next.text.trim())) continue;
-        pics.items[i].paragraph.getRange("After").insertOoxml(ooxml, "Replace");
-        added++;
-      }
-      await context.sync();
-      if (added === 0) { setLabStatus(6, "Todas já têm legenda.", "warn"); return; }
-      setLabStatus(6, `✓ ${added} legenda(s). F9 para atualizar numeração.`, "success");
-    });
-  } catch (e) { setLabStatus(6, "Erro: " + e.message, "error"); }
-}
-
-// ── Lab: V7 — w:document SEM Caption + paragraph.insertOoxml("After") ─────────
-
-async function runLabV7() {
-  setLabStatus(7, "Processando...", "info");
-  const { prefix, scope, texto } = labInputs();
-  try {
-    await Word.run(async (context) => {
-      const pics = getPics(context, scope);
-      pics.load("items");
-      await context.sync();
-      const n = pics.items.length;
-      if (n === 0) throw new Error("Nenhuma imagem encontrada.");
-      const nextParas = pics.items.map(p => p.paragraph.getNextOrNullObject());
-      nextParas.forEach(p => p.load("text"));
-      await context.sync();
-      const ooxml = buildDocOoxml(prefix, "center", texto, false);
-      let added = 0;
-      for (let i = n - 1; i >= 0; i--) {
-        const next = nextParas[i];
-        if (!next.isNullObject && /^(Foto|Figura)\s*\d/.test(next.text.trim())) continue;
-        pics.items[i].paragraph.insertOoxml(ooxml, "After");
-        added++;
-      }
-      await context.sync();
-      if (added === 0) { setLabStatus(7, "Todas já têm legenda.", "warn"); return; }
-      setLabStatus(7, `✓ ${added} legenda(s). F9 para atualizar numeração.`, "success");
-    });
-  } catch (e) { setLabStatus(7, "Erro: " + e.message, "error"); }
 }
 
