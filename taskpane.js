@@ -1,7 +1,7 @@
 /* global Office, Word */
 
 const CM = 28.35; // centimeters to points
-const LAB_VERSION = "24/05 · 16:25";
+const LAB_VERSION = "24/05 · 18:40";
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
@@ -120,6 +120,7 @@ const TITLES = {
   recuo:         "Recuo",
   chat:          "Chat IA",
   lab:           "Lab",
+  "legendas-lab": "Legendas (Lab)",
 };
 
 function showScreen(name) {
@@ -659,4 +660,141 @@ function buildPkgOoxml(prefix, jc, texto, styleId = "Caption") {
 </pkg:package>`;
 }
 
+// ── Lab: Legendas (fix fotos anteriores) ─────────────────────────────────────
+
+async function runLegendasLab() {
+  const prefix = radio("xleg-prefix");
+  const scope  = radio("xleg-scope");
+  const texto  = document.getElementById("xleg-texto").value.trim();
+
+  const statusEl = document.getElementById("status-legendas-lab");
+  statusEl.textContent = "Processando...";
+  statusEl.className = "status info";
+  statusEl.hidden = false;
+
+  try {
+    await Word.run(async (context) => {
+      const pics = getPics(context, scope);
+      pics.load("items");
+      await context.sync();
+
+      const n = pics.items.length;
+      if (n === 0) throw new Error("Nenhuma imagem encontrada.");
+
+      // Fase 1: inserir placeholder após TODAS as fotos sem pré-verificação.
+      // Usar paragraph.getRange("Whole") garante inserção após o parágrafo inteiro.
+      const allPhs = [];
+      for (let i = n - 1; i >= 0; i--) {
+        const ph = pics.items[i].paragraph.getRange("Whole").insertParagraph("__lb__", "After");
+        allPhs.push(ph);
+      }
+      await context.sync();
+
+      // Fase 1.5: verificar o que vem DEPOIS de cada placeholder.
+      // Se a foto já tinha legenda, o placeholder ficou entre a foto e a legenda existente
+      // → o próximo parágrafo do placeholder será a legenda → deletar esse placeholder.
+      const phNexts = allPhs.map(ph => ph.getNextOrNullObject());
+      phNexts.forEach(p => p.load("text"));
+      await context.sync();
+
+      const placeholders = [];
+      const toDelete = [];
+      for (let k = 0; k < allPhs.length; k++) {
+        const nextText = phNexts[k].isNullObject ? "" : phNexts[k].text.trim();
+        if (/^(Foto|Figura)\s+\d+/.test(nextText)) {
+          toDelete.push(allPhs[k]);
+        } else {
+          placeholders.push(allPhs[k]);
+        }
+      }
+
+      if (toDelete.length > 0) {
+        toDelete.forEach(ph => ph.delete());
+        await context.sync();
+      }
+
+      if (placeholders.length === 0) {
+        statusEl.textContent = "Todas as imagens já têm legenda.";
+        statusEl.className = "status warn";
+        return;
+      }
+
+      // Fase 2: aplicar estilo Caption/Legenda e OOXML com campo SEQ
+      let styleName = "Caption";
+      try {
+        for (const ph of placeholders) { ph.style = "Caption"; }
+        await context.sync();
+      } catch {
+        styleName = "Legenda";
+        for (const ph of placeholders) { ph.style = "Legenda"; }
+        await context.sync();
+      }
+
+      const ooxml = buildPkgOoxml(prefix, "left", texto, styleName);
+      for (const ph of placeholders) {
+        ph.getRange("Whole").insertOoxml(ooxml, "Replace");
+      }
+      await context.sync();
+
+      const added = placeholders.length;
+      const skipped = n - added;
+      const msg = skipped > 0
+        ? `✓ ${added} legenda(s) adicionada(s) (${skipped} já tinham).`
+        : `✓ ${added} legenda(s) adicionada(s).`;
+      statusEl.textContent = msg + " Use o Passo 2 para ajustar o alinhamento.";
+      statusEl.className = "status success";
+    });
+
+    await Word.run(async (context) => {
+      await aplicarKeepNextBody(context);
+    });
+
+  } catch (e) {
+    statusEl.textContent = "Erro: " + e.message;
+    statusEl.className = "status error";
+  }
+}
+
+async function runLegendasLabAlign() {
+  const align = radio("xleg-align");
+  const scope = radio("xleg-align-scope");
+
+  const statusEl = document.getElementById("status-legendas-lab-align");
+  statusEl.textContent = "Processando...";
+  statusEl.className = "status info";
+  statusEl.hidden = false;
+
+  const pattern = scope === "ambos"
+    ? /^(Foto|Figura)\s/i
+    : new RegExp(`^${scope.charAt(0).toUpperCase() + scope.slice(1)}\\s`, "i");
+
+  try {
+    await Word.run(async (context) => {
+      const paras = context.document.body.paragraphs;
+      paras.load("items");
+      await context.sync();
+
+      paras.items.forEach(p => p.load("text"));
+      await context.sync();
+
+      const targets = paras.items.filter(p => pattern.test(p.text.trim()));
+      if (targets.length === 0) {
+        statusEl.textContent = "Nenhuma legenda encontrada com esse prefixo.";
+        statusEl.className = "status warn";
+        return;
+      }
+
+      targets.forEach(p => { p.alignment = align; });
+      await context.sync();
+
+      await aplicarKeepNextBody(context);
+
+      statusEl.textContent = `✓ Alinhamento aplicado em ${targets.length} legenda(s) + "manter com o próximo" nas fotos.`;
+      statusEl.className = "status success";
+    });
+  } catch (e) {
+    statusEl.textContent = "Erro: " + e.message;
+    statusEl.className = "status error";
+  }
+}
 
