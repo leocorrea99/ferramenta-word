@@ -266,7 +266,33 @@
       <span class="tool-label">Legendas</span>
       <span class="tool-desc">Adicionar legendas às imagens</span>
     </button>
+    <button class="tool-card" onclick="showScreen('estilo-legenda-lab')">
+      <span class="tool-emoji">&#127912;</span>
+      <span class="tool-label">Estilo da Legenda</span>
+      <span class="tool-desc">Aplicar estilo Caption nas legendas</span>
+    </button>
   </div>
+</div>
+
+<!-- ── Lab: Estilo da Legenda ─────────────────────────────── -->
+<div id="screen-estilo-legenda-lab" class="screen hidden">
+  <div class="card">
+    <div class="card-title">Buscar legendas por prefixo</div>
+    <div class="radio-row">
+      <label class="radio"><input type="radio" name="eleg-prefix" value="Foto" checked> Foto</label>
+      <label class="radio"><input type="radio" name="eleg-prefix" value="Figura"> Figura</label>
+      <label class="radio"><input type="radio" name="eleg-prefix" value="ambos"> Ambos</label>
+    </div>
+
+    <div class="card-title">Aplicar em</div>
+    <div class="radio-row">
+      <label class="radio"><input type="radio" name="eleg-scope" value="all" checked> Todo o documento</label>
+      <label class="radio"><input type="radio" name="eleg-scope" value="selected"> Selecionadas</label>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="runEstiloLegendaLab()">Aplicar Estilo Caption</button>
+  <div id="status-estilo-legenda-lab" class="status" hidden></div>
 </div>
 
 <!-- ── Lab: Legendas ─────────────────────────────────────── -->

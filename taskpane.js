@@ -119,7 +119,8 @@ const TITLES = {
   recuo:         "Recuo",
   chat:          "Chat IA",
   lab:           "Lab",
-  "legendas-lab": "Legendas",
+  "legendas-lab":       "Legendas",
+  "estilo-legenda-lab": "Estilo da Legenda",
 };
 
 function showScreen(name) {
@@ -602,6 +603,55 @@ function buildPkgOoxml(prefix, jc, texto) {
     </pkg:xmlData>
   </pkg:part>
 </pkg:package>`;
+}
+
+// ── Lab: Estilo da Legenda ────────────────────────────────────────────────────
+
+async function runEstiloLegendaLab() {
+  const prefix = radio("eleg-prefix");
+  const scope  = radio("eleg-scope");
+
+  const statusEl = document.getElementById("status-estilo-legenda-lab");
+  statusEl.textContent = "Processando...";
+  statusEl.className = "status info";
+  statusEl.hidden = false;
+
+  const pattern = prefix === "ambos"
+    ? /^(Foto|Figura)\s/i
+    : new RegExp(`^${prefix}\\s`, "i");
+
+  try {
+    await Word.run(async (context) => {
+      let paras;
+      if (scope === "selected") {
+        paras = context.document.getSelection().paragraphs;
+      } else {
+        paras = context.document.body.paragraphs;
+      }
+      paras.load("items");
+      await context.sync();
+
+      // carrega o texto de todos os parágrafos para filtrar
+      paras.items.forEach(p => p.load("text"));
+      await context.sync();
+
+      const targets = paras.items.filter(p => pattern.test(p.text.trim()));
+      if (targets.length === 0) {
+        statusEl.textContent = "Nenhuma legenda encontrada com esse prefixo.";
+        statusEl.className = "status warn";
+        return;
+      }
+
+      targets.forEach(p => { p.style = "Caption"; });
+      await context.sync();
+
+      statusEl.textContent = `✓ Estilo Caption aplicado em ${targets.length} legenda(s).`;
+      statusEl.className = "status success";
+    });
+  } catch (e) {
+    statusEl.textContent = "Erro: " + e.message;
+    statusEl.className = "status error";
+  }
 }
 
 
