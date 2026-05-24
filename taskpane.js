@@ -1,7 +1,7 @@
 /* global Office, Word */
 
 const CM = 28.35; // centimeters to points
-const LAB_VERSION = "24/05 · 15:25";
+const LAB_VERSION = "24/05 · 15:40";
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
@@ -691,23 +691,32 @@ async function runManterLab() {
 
   try {
     await Word.run(async (context) => {
-      const pics = context.document.body.inlinePictures;
-      pics.load("items");
+      const paragraphs = context.document.body.paragraphs;
+      paragraphs.load("items");
       await context.sync();
 
-      const n = pics.items.length;
-      if (n === 0) {
-        statusEl.textContent = "Nenhuma imagem encontrada no documento.";
+      for (const p of paragraphs.items) {
+        p.inlinePictures.load("items");
+      }
+      await context.sync();
+
+      let total = 0;
+      for (const p of paragraphs.items) {
+        if (p.inlinePictures.items.length > 0) {
+          p.paragraphFormat.keepWithNext = true;
+          p.paragraphFormat.keepTogether = true;
+          total++;
+        }
+      }
+
+      if (total === 0) {
+        statusEl.textContent = "Nenhum parágrafo com imagem encontrado.";
         statusEl.className = "status warn";
         return;
       }
 
-      for (const pic of pics.items) {
-        pic.paragraph.paragraphFormat.keepWithNext = true;
-      }
       await context.sync();
-
-      statusEl.textContent = `✓ "Manter com o próximo" aplicado em ${n} imagem(ns).`;
+      statusEl.textContent = `✓ "Manter com o próximo" aplicado em ${total} parágrafo(s) com foto.`;
       statusEl.className = "status success";
     });
   } catch (e) {
