@@ -209,11 +209,10 @@ async function runLegendas() {
     if (placeholders.length === 0) return "Todas as imagens já têm legenda.";
     await context.sync();
 
-    // Fase 2: aplica Caption e substitui o conteúdo do placeholder por OOXML com campo SEQ
+    // Fase 2: substitui o parágrafo placeholder inteiro pelo OOXML com Caption + SEQ
     const ooxml = buildPkgOoxml(prefix, jc, texto);
     for (const ph of placeholders) {
-      ph.style = "Caption";
-      ph.getRange("Content").insertOoxml(ooxml, "Replace");
+      ph.getRange("Whole").insertOoxml(ooxml, "Replace");
     }
     await context.sync();
 
