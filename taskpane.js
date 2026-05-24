@@ -1,7 +1,7 @@
 /* global Office, Word */
 
 const CM = 28.35; // centimeters to points
-const LAB_VERSION = "24/05 · 18:40";
+const LAB_VERSION = "24/05 · 19:30";
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
@@ -351,7 +351,6 @@ async function aplicarKeepNextBody(context) {
   return total;
 }
 
-
 // ── Tool: Redimensionar ───────────────────────────────────────────────────────
 
 async function runRedimensionar() {
@@ -379,12 +378,10 @@ async function runRedimensionar() {
 
     for (const pic of pics.items) {
       if (ambos) {
-        // Ambos preenchidos → desbloqueia proporção e aplica exato
         pic.lockAspectRatio = false;
         pic.width  = wPts;
         pic.height = hPts;
       } else {
-        // Apenas um lado → Word ajusta o outro automaticamente
         pic.lockAspectRatio = true;
         if (wPts > 0) pic.width  = wPts;
         else          pic.height = hPts;
@@ -608,13 +605,11 @@ function setStatus(tool, msg, type) {
   el.hidden = false;
 }
 
-// Get selected radio value by name
 function radio(name) {
   const el = document.querySelector(`input[name="${name}"]:checked`);
   return el ? el.value : "";
 }
 
-// Get numeric input value, or null if empty
 function num(id) {
   const v = document.getElementById(id).value.trim();
   return v === "" ? null : parseFloat(v.replace(",", "."));
@@ -628,7 +623,7 @@ function xmlEsc(str) {
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-// pkg:package OOXML com estilo Caption + campo SEQ (versões e4ae5c5 / 69def05)
+// pkg:package OOXML com estilo Caption + campo SEQ
 function buildPkgOoxml(prefix, jc, texto, styleId = "Caption") {
   const extraRun = texto ? `<w:r><w:t xml:space="preserve"> - ${xmlEsc(texto)}</w:t></w:r>` : "";
   return `<pkg:package xmlns:pkg="http://schemas.microsoft.com/office/2006/xmlPackage">
@@ -674,43 +669,37 @@ async function runLegendasLab() {
 
   try {
     await Word.run(async (context) => {
-      const pics = getPics(context, scope);
-      pics.load("items");
+      // Carrega parágrafos diretamente — evita navegar pic → pic.paragraph
+      const col = scope === "selected"
+        ? context.document.getSelection().paragraphs
+        : context.document.body.paragraphs;
+
+      col.load("items");
       await context.sync();
 
-      const n = pics.items.length;
-      if (n === 0) throw new Error("Nenhuma imagem encontrada.");
-
-      // Fase 1: inserir placeholder após TODAS as fotos sem pré-verificação.
-      // Usar paragraph.getRange("Whole") garante inserção após o parágrafo inteiro.
-      const allPhs = [];
-      for (let i = n - 1; i >= 0; i--) {
-        const ph = pics.items[i].paragraph.getRange("Whole").insertParagraph("__lb__", "After");
-        allPhs.push(ph);
-      }
+      // Carrega texto e imagens de cada parágrafo num único sync
+      col.items.forEach(p => {
+        p.load("text");
+        p.inlinePictures.load("items");
+      });
       await context.sync();
 
-      // Fase 1.5: verificar o que vem DEPOIS de cada placeholder.
-      // Se a foto já tinha legenda, o placeholder ficou entre a foto e a legenda existente
-      // → o próximo parágrafo do placeholder será a legenda → deletar esse placeholder.
-      const phNexts = allPhs.map(ph => ph.getNextOrNullObject());
-      phNexts.forEach(p => p.load("text"));
+      // Filtra parágrafos que contêm ao menos uma imagem
+      const photoParas = col.items.filter(p => p.inlinePictures.items.length > 0);
+      if (photoParas.length === 0) throw new Error("Nenhuma imagem encontrada.");
+
+      // Verifica o próximo parágrafo no documento para cada parágrafo com foto
+      const nextParas = photoParas.map(p => p.getNextOrNullObject());
+      nextParas.forEach(np => np.load("text"));
       await context.sync();
 
+      // Insere placeholder apenas onde o próximo parágrafo não é já uma legenda
       const placeholders = [];
-      const toDelete = [];
-      for (let k = 0; k < allPhs.length; k++) {
-        const nextText = phNexts[k].isNullObject ? "" : phNexts[k].text.trim();
-        if (/^(Foto|Figura)\s+\d+/.test(nextText)) {
-          toDelete.push(allPhs[k]);
-        } else {
-          placeholders.push(allPhs[k]);
-        }
-      }
-
-      if (toDelete.length > 0) {
-        toDelete.forEach(ph => ph.delete());
-        await context.sync();
+      for (let i = photoParas.length - 1; i >= 0; i--) {
+        const nextText = nextParas[i].isNullObject ? "" : nextParas[i].text.trim();
+        if (/^(Foto|Figura)\s+\d+/.test(nextText)) continue;
+        const ph = photoParas[i].insertParagraph("__lb__", "After");
+        placeholders.push(ph);
       }
 
       if (placeholders.length === 0) {
@@ -718,26 +707,26 @@ async function runLegendasLab() {
         statusEl.className = "status warn";
         return;
       }
+      await context.sync();
 
-      // Fase 2: aplicar estilo Caption/Legenda e OOXML com campo SEQ
+      // Aplica estilo Caption/Legenda
       let styleName = "Caption";
       try {
-        for (const ph of placeholders) { ph.style = "Caption"; }
+        placeholders.forEach(ph => { ph.style = "Caption"; });
         await context.sync();
       } catch {
         styleName = "Legenda";
-        for (const ph of placeholders) { ph.style = "Legenda"; }
+        placeholders.forEach(ph => { ph.style = "Legenda"; });
         await context.sync();
       }
 
+      // Substitui placeholder pelo OOXML com campo SEQ
       const ooxml = buildPkgOoxml(prefix, "left", texto, styleName);
-      for (const ph of placeholders) {
-        ph.getRange("Whole").insertOoxml(ooxml, "Replace");
-      }
+      placeholders.forEach(ph => ph.getRange("Whole").insertOoxml(ooxml, "Replace"));
       await context.sync();
 
       const added = placeholders.length;
-      const skipped = n - added;
+      const skipped = photoParas.length - added;
       const msg = skipped > 0
         ? `✓ ${added} legenda(s) adicionada(s) (${skipped} já tinham).`
         : `✓ ${added} legenda(s) adicionada(s).`;
@@ -797,4 +786,3 @@ async function runLegendasLabAlign() {
     statusEl.className = "status error";
   }
 }
-
