@@ -1,7 +1,7 @@
 /* global Office, Word */
 
 const CM = 28.35; // centimeters to points
-const LAB_VERSION = "24/05 · 15:10";
+const LAB_VERSION = "24/05 · 15:25";
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
@@ -702,14 +702,8 @@ async function runManterLab() {
         return;
       }
 
-      // Obtém o OOXML de cada parágrafo de foto para injetar <w:keepNext/>
-      const paraRanges = pics.items.map(pic => pic.paragraph.getRange("Whole"));
-      const ooxmlResults = paraRanges.map(r => r.getOoxml());
-      await context.sync();
-
-      for (let i = 0; i < paraRanges.length; i++) {
-        const xml = injectKeepNext(ooxmlResults[i].value);
-        paraRanges[i].insertOoxml(xml, "Replace");
+      for (const pic of pics.items) {
+        pic.paragraph.paragraphFormat.keepWithNext = true;
       }
       await context.sync();
 
@@ -720,13 +714,6 @@ async function runManterLab() {
     statusEl.textContent = "Erro: " + e.message;
     statusEl.className = "status error";
   }
-}
-
-function injectKeepNext(xml) {
-  if (/<w:keepNext[\s\/>]/.test(xml)) return xml; // já tem, não duplica
-  if (xml.includes('<w:pPr>')) return xml.replace('<w:pPr>', '<w:pPr><w:keepNext/>');
-  if (/<w:pPr\s/.test(xml)) return xml.replace(/(<w:pPr\s[^>]*>)/, '$1<w:keepNext/>');
-  return xml.replace(/(<w:p\b[^>]*>)/, '$1<w:pPr><w:keepNext/></w:pPr>');
 }
 
 // ── Lab: Estilo da Legenda ────────────────────────────────────────────────────
