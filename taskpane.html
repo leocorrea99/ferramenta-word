@@ -12,7 +12,7 @@
 <body>
 
 <header>
-  <button id="back-btn" class="back-btn hidden" onclick="showHome()">&#8592; Voltar</button>
+  <button id="back-btn" class="back-btn hidden" onclick="goBack()">&#8592; Voltar</button>
   <div class="header-text">
     <h1 id="header-title">LaudoBot</h1>
     <p id="header-sub">Carregando...</p>
@@ -258,42 +258,20 @@
 
 </div>
 
-<!-- ── Lab (menu secreto — 5 toques no título) ───────── -->
+<!-- ── Lab home (menu secreto — 5 toques no título) ─────── -->
 <div id="screen-lab" class="screen hidden">
-
-  <div class="card">
-    <div class="two-col">
-      <div>
-        <div class="card-title">Prefixo</div>
-        <div class="radio-row">
-          <label class="radio"><input type="radio" name="lab-prefix" value="Foto" checked> Foto</label>
-          <label class="radio"><input type="radio" name="lab-prefix" value="Figura"> Figura</label>
-        </div>
-      </div>
-      <div>
-        <div class="card-title">Aplicar em</div>
-        <div class="radio-row">
-          <label class="radio"><input type="radio" name="lab-scope" value="all" checked> Todas</label>
-          <label class="radio"><input type="radio" name="lab-scope" value="selected"> Selecionadas</label>
-        </div>
-      </div>
-    </div>
-    <div class="card-title" style="margin-top:8px">Alinhamento</div>
-    <div class="radio-row wrap">
-      <label class="radio"><input type="radio" name="lab-align" value="left"> Esquerda</label>
-      <label class="radio"><input type="radio" name="lab-align" value="centered" checked> Centro</label>
-      <label class="radio"><input type="radio" name="lab-align" value="right"> Direita</label>
-    </div>
-    <div class="field" style="margin-top:8px">
-      <label for="lab-texto">Texto adicional (opcional)</label>
-      <input type="text" id="lab-texto" placeholder="ex: Painéis solares">
-    </div>
+  <div class="tool-grid">
+    <button class="tool-card" onclick="showScreen('legendas-lab')">
+      <span class="tool-emoji">&#127991;&#65039;</span>
+      <span class="tool-label">Legendas</span>
+      <span class="tool-desc">Adicionar legendas às imagens</span>
+    </button>
   </div>
+</div>
 
-  <!-- ── Legendas Lab (cópia da ferramenta atual para testes) ── -->
+<!-- ── Lab: Legendas ─────────────────────────────────────── -->
+<div id="screen-legendas-lab" class="screen hidden">
   <div class="card">
-    <div class="card-title">Legendas Lab</div>
-
     <div class="card-title">Prefixo</div>
     <div class="radio-row">
       <label class="radio"><input type="radio" name="xleg-prefix" value="Foto" checked> Foto</label>
@@ -317,19 +295,10 @@
       <label class="radio"><input type="radio" name="xleg-scope" value="all" checked> Todas</label>
       <label class="radio"><input type="radio" name="xleg-scope" value="selected"> Selecionadas</label>
     </div>
-
-    <button class="btn btn-primary" onclick="runLegendasLab()" style="margin-top:12px">Adicionar Legendas (Lab)</button>
-    <div id="status-legendas-lab" class="status" hidden></div>
   </div>
 
-  <!-- ── Versão 17/05 ── -->
-  <div class="card">
-    <div class="card-title">Versão 17/05 — Texto simples</div>
-    <p class="hint">insertParagraph com texto e número sequencial fixo. Sem SEQ field, sem estilo Caption.</p>
-    <button class="btn btn-primary" onclick="runLabMay17()">Testar versão 17/05</button>
-    <div id="lab-status-may17" class="status" hidden></div>
-  </div>
-
+  <button class="btn btn-primary" onclick="runLegendasLab()">Adicionar Legendas</button>
+  <div id="status-legendas-lab" class="status" hidden></div>
 </div>
 
 <div id="screen-expired" class="screen hidden">

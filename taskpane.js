@@ -119,6 +119,7 @@ const TITLES = {
   recuo:         "Recuo",
   chat:          "Chat IA",
   lab:           "Lab",
+  "legendas-lab": "Legendas",
 };
 
 function showScreen(name) {
@@ -131,6 +132,13 @@ function showScreen(name) {
 function showHome() {
   showScreen("home");
   loadDocInfo();
+}
+
+function goBack() {
+  const current = document.querySelector(".screen:not(.hidden)")?.id.replace("screen-", "") || "home";
+  if (current === "lab" || current === "home") { showHome(); }
+  else if (current.endsWith("-lab"))           { showScreen("lab"); }
+  else                                          { showHome(); }
 }
 
 // ── Lab secret menu (5 taps on title) ────────────────────────────────────────
@@ -595,53 +603,4 @@ function buildPkgOoxml(prefix, jc, texto) {
 </pkg:package>`;
 }
 
-// ── Lab: versão de 17/05 — insertParagraph texto simples ─────────────────────
-
-async function runLabMay17() {
-  const el = document.getElementById("lab-status-may17");
-  el.textContent = "Processando...";
-  el.className = "status info";
-  el.hidden = false;
-
-  const prefix = document.querySelector('input[name="lab-prefix"]:checked')?.value || "Foto";
-  const scope  = document.querySelector('input[name="lab-scope"]:checked')?.value  || "all";
-  const align  = document.querySelector('input[name="lab-align"]:checked')?.value  || "centered";
-  const texto  = document.getElementById("lab-texto").value.trim();
-
-  try {
-    await Word.run(async (context) => {
-      const pics = getPics(context, scope);
-      pics.load("items");
-      await context.sync();
-
-      const n = pics.items.length;
-      if (n === 0) throw new Error("Nenhuma imagem encontrada.");
-
-      const nextParas = pics.items.map(pic => pic.paragraph.getNextOrNullObject());
-      nextParas.forEach(p => p.load("text"));
-      await context.sync();
-
-      let added = 0;
-      for (let i = n - 1; i >= 0; i--) {
-        const next = nextParas[i];
-        if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) continue;
-        const label = texto ? `${prefix} ${i + 1} - ${texto}` : `${prefix} ${i + 1}`;
-        const para = pics.items[i].getRange().insertParagraph(label, "After");
-        if (align) para.alignment = align;
-        added++;
-      }
-      await context.sync();
-
-      if (added === 0) { el.textContent = "Todas as imagens já têm legenda."; el.className = "status warn"; return; }
-      const skipped = n - added;
-      el.textContent = skipped > 0
-        ? `✓ ${added} legenda(s) adicionada(s) (${skipped} já tinham).`
-        : `✓ ${added} legenda(s) adicionada(s).`;
-      el.className = "status success";
-    });
-  } catch (e) {
-    el.textContent = "Erro: " + e.message;
-    el.className = "status error";
-  }
-}
 
