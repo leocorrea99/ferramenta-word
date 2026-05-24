@@ -574,3 +574,32 @@ async function legendaDevStep2() {
     setDevStatus(2, "Erro: " + e.message, "error");
   }
 }
+
+// Passo 4: range.insertOoxml com apenas <w:p> como raiz (sem w:document)
+async function legendaDevStep4() {
+  setDevStatus(4, "Processando...", "info");
+  try {
+    await Word.run(async (context) => {
+      const sel = context.document.getSelection();
+      const pics = sel.inlinePictures;
+      pics.load("items");
+      await context.sync();
+
+      if (pics.items.length === 0) throw new Error("Selecione uma imagem no Word primeiro.");
+
+      const pic = pics.items[0];
+
+      // Insere parágrafo temporário (funciona — confirmado no Passo 1)
+      const newPara = pic.paragraph.insertParagraph("TEMP", "After");
+      await context.sync();
+
+      // Substitui com OOXML usando apenas <w:p> como raiz — sem wrapper w:document
+      const ooxml = `<w:p xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t xml:space="preserve">Foto </w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> SEQ Foto \* ARABIC </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>`;
+      newPara.getRange().insertOoxml(ooxml, "Replace");
+      await context.sync();
+    });
+    setDevStatus(4, "✓ Feito! Campo SEQ apareceu no Word?", "success");
+  } catch (e) {
+    setDevStatus(4, "Erro: " + e.message, "error");
+  }
+}

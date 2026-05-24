@@ -282,10 +282,17 @@
   </div>
 
   <div class="card">
-    <div class="card-title">Passo 3 — insertParagraph + range.insertOoxml</div>
-    <p class="hint">Selecione uma imagem. Cria o parágrafo com insertParagraph, depois substitui o conteúdo com OOXML + campo SEQ.</p>
-    <button class="btn btn-primary" onclick="legendaDevStep3()">Testar abordagem combinada</button>
+    <div class="card-title">Passo 3 — range.insertOoxml com w:document</div>
+    <p class="hint">Selecione uma imagem. Cria parágrafo, substitui com OOXML no formato w:document.</p>
+    <button class="btn btn-primary" onclick="legendaDevStep3()">Testar w:document</button>
     <div id="status-legenda-dev-3" class="status" hidden></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Passo 4 — range.insertOoxml só com &lt;w:p&gt;</div>
+    <p class="hint">Selecione uma imagem. Usa apenas o elemento &lt;w:p&gt; sem wrapper de documento.</p>
+    <button class="btn btn-primary" onclick="legendaDevStep4()">Testar só w:p</button>
+    <div id="status-legenda-dev-4" class="status" hidden></div>
   </div>
 </div>
 
