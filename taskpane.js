@@ -1,7 +1,7 @@
 /* global Office, Word */
 
 const CM = 28.35; // centimeters to points
-const LAB_VERSION = "24/05 · 15:55";
+const LAB_VERSION = "24/05 · 16:10";
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
@@ -239,6 +239,52 @@ async function runLegendas() {
   });
 }
 
+// ── Auxiliar: injeta w:keepNext nos parágrafos com foto via OOXML do body ────
+
+async function aplicarKeepNextBody(context) {
+  const body = context.document.body;
+  const ooxmlResult = body.getOoxml();
+  await context.sync();
+
+  const W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+  const xmlDoc = new DOMParser().parseFromString(ooxmlResult.value, "application/xml");
+  const paras = xmlDoc.getElementsByTagNameNS(W, "p");
+  let total = 0;
+
+  for (let i = 0; i < paras.length; i++) {
+    const p = paras[i];
+    const temImagem =
+      p.getElementsByTagNameNS(W, "drawing").length > 0 ||
+      p.getElementsByTagNameNS(W, "pict").length > 0;
+    if (!temImagem) continue;
+
+    let pPr = null;
+    for (let j = 0; j < p.childNodes.length; j++) {
+      const c = p.childNodes[j];
+      if (c.nodeType === 1 && c.namespaceURI === W && c.localName === "pPr") {
+        pPr = c; break;
+      }
+    }
+    if (!pPr) {
+      pPr = xmlDoc.createElementNS(W, "w:pPr");
+      p.insertBefore(pPr, p.firstChild);
+    }
+
+    if (pPr.getElementsByTagNameNS(W, "keepNext").length === 0) {
+      pPr.appendChild(xmlDoc.createElementNS(W, "w:keepNext"));
+    }
+    total++;
+  }
+
+  if (total > 0) {
+    const novoOoxml = new XMLSerializer().serializeToString(xmlDoc);
+    body.insertOoxml(novoOoxml, Word.InsertLocation.replace);
+    await context.sync();
+  }
+
+  return total;
+}
+
 // ── Lab: cópia da ferramenta de Legendas para testes ─────────────────────────
 
 async function runLegendasLab() {
@@ -308,22 +354,9 @@ async function runLegendasLab() {
       statusEl.className = "status success";
     });
 
-    // Word.run separado: itera parágrafos → verifica quais têm foto → marca keepWithNext
+    // Aplica keepWithNext em todas as fotos via OOXML
     await Word.run(async (context) => {
-      const paras = context.document.body.paragraphs;
-      paras.load("items");
-      await context.sync();
-
-      const picCols = paras.items.map(p => p.inlinePictures);
-      picCols.forEach(c => c.load("items"));
-      await context.sync();
-
-      paras.items.forEach((p, i) => {
-        if (picCols[i].items.length > 0) {
-          p.keepWithNext = true;
-        }
-      });
-      await context.sync();
+      await aplicarKeepNextBody(context);
     });
 
   } catch (e) {
@@ -691,53 +724,12 @@ async function runManterLab() {
 
   try {
     await Word.run(async (context) => {
-      const body = context.document.body;
-      const ooxmlResult = body.getOoxml();
-      await context.sync();
-
-      const W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
-      const xmlDoc = new DOMParser().parseFromString(ooxmlResult.value, "application/xml");
-      const paras = xmlDoc.getElementsByTagNameNS(W, "p");
-      let total = 0;
-
-      for (let i = 0; i < paras.length; i++) {
-        const p = paras[i];
-        const temImagem =
-          p.getElementsByTagNameNS(W, "drawing").length > 0 ||
-          p.getElementsByTagNameNS(W, "pict").length > 0;
-        if (!temImagem) continue;
-
-        // Busca ou cria w:pPr
-        let pPr = null;
-        for (let j = 0; j < p.childNodes.length; j++) {
-          const c = p.childNodes[j];
-          if (c.nodeType === 1 && c.namespaceURI === W && c.localName === "pPr") {
-            pPr = c; break;
-          }
-        }
-        if (!pPr) {
-          pPr = xmlDoc.createElementNS(W, "w:pPr");
-          p.insertBefore(pPr, p.firstChild);
-        }
-
-        // Injeta w:keepNext se ainda não existir
-        if (pPr.getElementsByTagNameNS(W, "keepNext").length === 0) {
-          pPr.appendChild(xmlDoc.createElementNS(W, "w:keepNext"));
-        }
-
-        total++;
-      }
-
+      const total = await aplicarKeepNextBody(context);
       if (total === 0) {
         statusEl.textContent = "Nenhum parágrafo com imagem encontrado.";
         statusEl.className = "status warn";
         return;
       }
-
-      const novoOoxml = new XMLSerializer().serializeToString(xmlDoc);
-      body.insertOoxml(novoOoxml, Word.InsertLocation.replace);
-      await context.sync();
-
       statusEl.textContent = `✓ "Manter com o próximo" aplicado em ${total} foto(s).`;
       statusEl.className = "status success";
     });
