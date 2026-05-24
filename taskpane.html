@@ -258,6 +258,47 @@
 
 </div>
 
+<!-- ── Lab (menu secreto — 5 toques no título) ───────── -->
+<div id="screen-lab" class="screen hidden">
+
+  <div class="card">
+    <div class="two-col">
+      <div>
+        <div class="card-title">Prefixo</div>
+        <div class="radio-row">
+          <label class="radio"><input type="radio" name="lab-prefix" value="Foto" checked> Foto</label>
+          <label class="radio"><input type="radio" name="lab-prefix" value="Figura"> Figura</label>
+        </div>
+      </div>
+      <div>
+        <div class="card-title">Aplicar em</div>
+        <div class="radio-row">
+          <label class="radio"><input type="radio" name="lab-scope" value="all" checked> Todas</label>
+          <label class="radio"><input type="radio" name="lab-scope" value="selected"> Selecionadas</label>
+        </div>
+      </div>
+    </div>
+    <div class="card-title" style="margin-top:8px">Alinhamento</div>
+    <div class="radio-row wrap">
+      <label class="radio"><input type="radio" name="lab-align" value="left"> Esquerda</label>
+      <label class="radio"><input type="radio" name="lab-align" value="centered" checked> Centro</label>
+      <label class="radio"><input type="radio" name="lab-align" value="right"> Direita</label>
+    </div>
+    <div class="field" style="margin-top:8px">
+      <label for="lab-texto">Texto adicional (opcional)</label>
+      <input type="text" id="lab-texto" placeholder="ex: Painéis solares">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Versão 17/05 — Texto simples</div>
+    <p class="hint">insertParagraph com texto e número sequencial fixo. Sem SEQ field, sem estilo Caption.</p>
+    <button class="btn btn-primary" onclick="runLabMay17()">Testar versão 17/05</button>
+    <div id="lab-status-may17" class="status" hidden></div>
+  </div>
+
+</div>
+
 <div id="screen-expired" class="screen hidden">
   <div class="expired-card">
     <div class="expired-icon">&#128274;</div>

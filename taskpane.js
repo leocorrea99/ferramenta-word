@@ -118,6 +118,7 @@ const TITLES = {
   paragrafo:     "Parágrafo",
   recuo:         "Recuo",
   chat:          "Chat IA",
+  lab:           "Lab",
 };
 
 function showScreen(name) {
@@ -131,6 +132,18 @@ function showHome() {
   showScreen("home");
   loadDocInfo();
 }
+
+// ── Lab secret menu (5 taps on title) ────────────────────────────────────────
+
+let _labTaps = 0, _labTimer = null;
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("header-title").addEventListener("click", () => {
+    _labTaps++;
+    clearTimeout(_labTimer);
+    if (_labTaps >= 5) { _labTaps = 0; showScreen("lab"); }
+    else { _labTimer = setTimeout(() => { _labTaps = 0; }, 1500); }
+  });
+});
 
 
 function toggleRecuoVal(show) {
@@ -185,16 +198,26 @@ async function runLegendas() {
     nextParas.forEach(p => p.load("text"));
     await context.sync();
 
-    let added = 0;
+    // Fase 1: insertParagraph posiciona corretamente abaixo de cada foto (confirmado funcional)
+    const placeholders = [];
     for (let i = n - 1; i >= 0; i--) {
       const next = nextParas[i];
       if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) continue;
-      pics.items[i].paragraph.getRange("Whole").insertOoxml(buildPkgOoxml(prefix, jc, texto), "After");
-      added++;
+      const ph = pics.items[i].getRange().insertParagraph("__lb__", "After");
+      placeholders.push(ph);
+    }
+    if (placeholders.length === 0) return "Todas as imagens já têm legenda.";
+    await context.sync();
+
+    // Fase 2: insere OOXML com Caption+SEQ antes de cada placeholder e deleta o placeholder
+    const ooxml = buildPkgOoxml(prefix, jc, texto);
+    for (const ph of placeholders) {
+      ph.insertOoxml(ooxml, "Before");
+      ph.delete();
     }
     await context.sync();
 
-    if (added === 0) return "Todas as imagens já têm legenda.";
+    const added = placeholders.length;
     const skipped = n - added;
     const msg = skipped > 0
       ? `${added} legenda(s) adicionada(s) (${skipped} já tinham).`
@@ -509,5 +532,55 @@ function buildPkgOoxml(prefix, jc, texto) {
     </pkg:xmlData>
   </pkg:part>
 </pkg:package>`;
+}
+
+// ── Lab: versão de 17/05 — insertParagraph texto simples ─────────────────────
+
+async function runLabMay17() {
+  const el = document.getElementById("lab-status-may17");
+  el.textContent = "Processando...";
+  el.className = "status info";
+  el.hidden = false;
+
+  const prefix = document.querySelector('input[name="lab-prefix"]:checked')?.value || "Foto";
+  const scope  = document.querySelector('input[name="lab-scope"]:checked')?.value  || "all";
+  const align  = document.querySelector('input[name="lab-align"]:checked')?.value  || "centered";
+  const texto  = document.getElementById("lab-texto").value.trim();
+
+  try {
+    await Word.run(async (context) => {
+      const pics = getPics(context, scope);
+      pics.load("items");
+      await context.sync();
+
+      const n = pics.items.length;
+      if (n === 0) throw new Error("Nenhuma imagem encontrada.");
+
+      const nextParas = pics.items.map(pic => pic.paragraph.getNextOrNullObject());
+      nextParas.forEach(p => p.load("text"));
+      await context.sync();
+
+      let added = 0;
+      for (let i = n - 1; i >= 0; i--) {
+        const next = nextParas[i];
+        if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) continue;
+        const label = texto ? `${prefix} ${i + 1} - ${texto}` : `${prefix} ${i + 1}`;
+        const para = pics.items[i].getRange().insertParagraph(label, "After");
+        if (align) para.alignment = align;
+        added++;
+      }
+      await context.sync();
+
+      if (added === 0) { el.textContent = "Todas as imagens já têm legenda."; el.className = "status warn"; return; }
+      const skipped = n - added;
+      el.textContent = skipped > 0
+        ? `✓ ${added} legenda(s) adicionada(s) (${skipped} já tinham).`
+        : `✓ ${added} legenda(s) adicionada(s).`;
+      el.className = "status success";
+    });
+  } catch (e) {
+    el.textContent = "Erro: " + e.message;
+    el.className = "status error";
+  }
 }
 
