@@ -120,9 +120,6 @@ const TITLES = {
   recuo:         "Recuo",
   chat:          "Chat IA",
   lab:           "Lab",
-  "legendas-lab":       "Legendas",
-  "estilo-legenda-lab": "Estilo da Legenda",
-  "manter-lab":         "Manter com próximo",
 };
 
 function showScreen(name) {
@@ -194,49 +191,117 @@ async function loadDocInfo() {
 
 async function runLegendas() {
   const prefix = radio("leg-prefix");
-  const align  = radio("leg-align");
   const scope  = radio("leg-scope");
   const texto  = document.getElementById("leg-texto").value.trim();
-  const jcMap  = { left: "left", centered: "center", right: "right", justified: "both" };
-  const jc     = jcMap[align] || "center";
 
-  await runTool("legendas", async (context) => {
-    const pics = getPics(context, scope);
-    pics.load("items");
-    await context.sync();
+  const statusEl = document.getElementById("status-legendas");
+  statusEl.textContent = "Processando...";
+  statusEl.className = "status info";
+  statusEl.hidden = false;
 
-    const n = pics.items.length;
-    if (n === 0) throw new Error("Nenhuma imagem encontrada.");
+  try {
+    await Word.run(async (context) => {
+      const pics = getPics(context, scope);
+      pics.load("items");
+      await context.sync();
 
-    const nextParas = pics.items.map(pic => pic.paragraph.getNextOrNullObject());
-    nextParas.forEach(p => p.load("text"));
-    await context.sync();
+      const n = pics.items.length;
+      if (n === 0) throw new Error("Nenhuma imagem encontrada.");
 
-    // Fase 1: insertParagraph posiciona corretamente abaixo de cada foto (confirmado funcional)
-    const placeholders = [];
-    for (let i = n - 1; i >= 0; i--) {
-      const next = nextParas[i];
-      if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) continue;
-      const ph = pics.items[i].getRange().insertParagraph("__lb__", "After");
-      placeholders.push(ph);
-    }
-    if (placeholders.length === 0) return "Todas as imagens já têm legenda.";
-    await context.sync();
+      const nextParas = pics.items.map(pic => pic.paragraph.getNextOrNullObject());
+      nextParas.forEach(p => p.load("text"));
+      await context.sync();
 
-    // Fase 2: substitui o parágrafo placeholder inteiro pelo OOXML com Caption + SEQ
-    const ooxml = buildPkgOoxml(prefix, jc, texto);
-    for (const ph of placeholders) {
-      ph.getRange("Whole").insertOoxml(ooxml, "Replace");
-    }
-    await context.sync();
+      const placeholders = [];
+      for (let i = n - 1; i >= 0; i--) {
+        const next = nextParas[i];
+        if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) continue;
+        const ph = pics.items[i].getRange().insertParagraph("__lb__", "After");
+        placeholders.push(ph);
+      }
+      if (placeholders.length === 0) {
+        statusEl.textContent = "Todas as imagens já têm legenda.";
+        statusEl.className = "status warn";
+        return;
+      }
+      await context.sync();
 
-    const added = placeholders.length;
-    const skipped = n - added;
-    const msg = skipped > 0
-      ? `${added} legenda(s) adicionada(s) (${skipped} já tinham).`
-      : `${added} legenda(s) adicionada(s).`;
-    return msg + " Pressione F9 para atualizar a numeração.";
-  });
+      let styleName = "Caption";
+      try {
+        for (const ph of placeholders) { ph.style = "Caption"; }
+        await context.sync();
+      } catch {
+        styleName = "Legenda";
+        for (const ph of placeholders) { ph.style = "Legenda"; }
+        await context.sync();
+      }
+
+      const ooxml = buildPkgOoxml(prefix, "left", texto, styleName);
+      for (const ph of placeholders) {
+        ph.getRange("Whole").insertOoxml(ooxml, "Replace");
+      }
+      await context.sync();
+
+      const added = placeholders.length;
+      const skipped = n - added;
+      const msg = skipped > 0
+        ? `✓ ${added} legenda(s) adicionada(s) (${skipped} já tinham).`
+        : `✓ ${added} legenda(s) adicionada(s).`;
+      statusEl.textContent = msg + " Use o Passo 2 para ajustar o alinhamento.";
+      statusEl.className = "status success";
+    });
+
+    await Word.run(async (context) => {
+      await aplicarKeepNextBody(context);
+    });
+
+  } catch (e) {
+    statusEl.textContent = "Erro: " + e.message;
+    statusEl.className = "status error";
+  }
+}
+
+async function runLegendasAlign() {
+  const align = radio("leg-align");
+  const scope = radio("leg-align-scope");
+
+  const statusEl = document.getElementById("status-legendas-align");
+  statusEl.textContent = "Processando...";
+  statusEl.className = "status info";
+  statusEl.hidden = false;
+
+  const pattern = scope === "ambos"
+    ? /^(Foto|Figura)\s/i
+    : new RegExp(`^${scope.charAt(0).toUpperCase() + scope.slice(1)}\\s`, "i");
+
+  try {
+    await Word.run(async (context) => {
+      const paras = context.document.body.paragraphs;
+      paras.load("items");
+      await context.sync();
+
+      paras.items.forEach(p => p.load("text"));
+      await context.sync();
+
+      const targets = paras.items.filter(p => pattern.test(p.text.trim()));
+      if (targets.length === 0) {
+        statusEl.textContent = "Nenhuma legenda encontrada com esse prefixo.";
+        statusEl.className = "status warn";
+        return;
+      }
+
+      targets.forEach(p => { p.alignment = align; });
+      await context.sync();
+
+      await aplicarKeepNextBody(context);
+
+      statusEl.textContent = `✓ Alinhamento aplicado em ${targets.length} legenda(s) + "manter com o próximo" nas fotos.`;
+      statusEl.className = "status success";
+    });
+  } catch (e) {
+    statusEl.textContent = "Erro: " + e.message;
+    statusEl.className = "status error";
+  }
 }
 
 // ── Auxiliar: injeta w:keepNext nos parágrafos com foto via OOXML do body ────
@@ -285,128 +350,6 @@ async function aplicarKeepNextBody(context) {
   return total;
 }
 
-// ── Lab: cópia da ferramenta de Legendas para testes ─────────────────────────
-
-async function runLegendasLab() {
-  const prefix = radio("xleg-prefix");
-  const scope  = radio("xleg-scope");
-  const texto  = document.getElementById("xleg-texto").value.trim();
-
-  const statusEl = document.getElementById("status-legendas-lab");
-  statusEl.textContent = "Processando...";
-  statusEl.className = "status info";
-  statusEl.hidden = false;
-
-  try {
-    await Word.run(async (context) => {
-      const pics = getPics(context, scope);
-      pics.load("items");
-      await context.sync();
-
-      const n = pics.items.length;
-      if (n === 0) throw new Error("Nenhuma imagem encontrada.");
-
-      const nextParas = pics.items.map(pic => pic.paragraph.getNextOrNullObject());
-      nextParas.forEach(p => p.load("text"));
-      await context.sync();
-
-      const placeholders = [];
-      const photosComLegenda = [];
-      for (let i = n - 1; i >= 0; i--) {
-        const next = nextParas[i];
-        if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) continue;
-        const ph = pics.items[i].getRange().insertParagraph("__lb__", "After");
-        placeholders.push(ph);
-        photosComLegenda.push(pics.items[i]);
-      }
-      if (placeholders.length === 0) {
-        statusEl.textContent = "Todas as imagens já têm legenda.";
-        statusEl.className = "status warn";
-        return;
-      }
-      await context.sync();
-
-      // Aplica estilo Caption (EN) ou Legenda (PT) nos placeholders
-      let styleName = "Caption";
-      try {
-        for (const ph of placeholders) { ph.style = "Caption"; }
-        await context.sync();
-      } catch {
-        styleName = "Legenda";
-        for (const ph of placeholders) { ph.style = "Legenda"; }
-        await context.sync();
-      }
-
-      // Substitui o parágrafo inteiro pelo OOXML com campo SEQ
-      // usa o styleId detectado (Caption em EN, Legenda em PT)
-      const ooxml = buildPkgOoxml(prefix, "left", texto, styleName);
-      for (const ph of placeholders) {
-        ph.getRange("Whole").insertOoxml(ooxml, "Replace");
-      }
-      await context.sync();
-
-      const added = placeholders.length;
-      const skipped = n - added;
-      const msg = skipped > 0
-        ? `✓ ${added} legenda(s) adicionada(s) (${skipped} já tinham).`
-        : `✓ ${added} legenda(s) adicionada(s).`;
-      statusEl.textContent = msg + " Use o Passo 2 para ajustar o alinhamento.";
-      statusEl.className = "status success";
-    });
-
-    // Aplica keepWithNext em todas as fotos via OOXML
-    await Word.run(async (context) => {
-      await aplicarKeepNextBody(context);
-    });
-
-  } catch (e) {
-    statusEl.textContent = "Erro: " + e.message;
-    statusEl.className = "status error";
-  }
-}
-
-async function runLegendasLabAlign() {
-  const align = radio("xleg-align");
-  const scope = radio("xleg-align-scope");
-
-  const statusEl = document.getElementById("status-legendas-lab-align");
-  statusEl.textContent = "Processando...";
-  statusEl.className = "status info";
-  statusEl.hidden = false;
-
-  const pattern = scope === "ambos"
-    ? /^(Foto|Figura)\s/i
-    : new RegExp(`^${scope.charAt(0).toUpperCase() + scope.slice(1)}\\s`, "i");
-
-  try {
-    await Word.run(async (context) => {
-      const paras = context.document.body.paragraphs;
-      paras.load("items");
-      await context.sync();
-
-      paras.items.forEach(p => p.load("text"));
-      await context.sync();
-
-      const targets = paras.items.filter(p => pattern.test(p.text.trim()));
-      if (targets.length === 0) {
-        statusEl.textContent = "Nenhuma legenda encontrada com esse prefixo.";
-        statusEl.className = "status warn";
-        return;
-      }
-
-      targets.forEach(p => { p.alignment = align; });
-      await context.sync();
-
-      await aplicarKeepNextBody(context);
-
-      statusEl.textContent = `✓ Alinhamento aplicado em ${targets.length} legenda(s) + "manter com o próximo" nas fotos.`;
-      statusEl.className = "status success";
-    });
-  } catch (e) {
-    statusEl.textContent = "Erro: " + e.message;
-    statusEl.className = "status error";
-  }
-}
 
 // ── Tool: Redimensionar ───────────────────────────────────────────────────────
 
@@ -714,88 +657,6 @@ function buildPkgOoxml(prefix, jc, texto, styleId = "Caption") {
     </pkg:xmlData>
   </pkg:part>
 </pkg:package>`;
-}
-
-// ── Lab: Manter com o próximo ─────────────────────────────────────────────────
-
-async function runManterLab() {
-  const statusEl = document.getElementById("status-manter-lab");
-  statusEl.textContent = "Processando...";
-  statusEl.className = "status info";
-  statusEl.hidden = false;
-
-  try {
-    await Word.run(async (context) => {
-      const total = await aplicarKeepNextBody(context);
-      if (total === 0) {
-        statusEl.textContent = "Nenhum parágrafo com imagem encontrado.";
-        statusEl.className = "status warn";
-        return;
-      }
-      statusEl.textContent = `✓ "Manter com o próximo" aplicado em ${total} foto(s).`;
-      statusEl.className = "status success";
-    });
-  } catch (e) {
-    statusEl.textContent = "Erro: " + e.message;
-    statusEl.className = "status error";
-  }
-}
-
-// ── Lab: Estilo da Legenda ────────────────────────────────────────────────────
-
-async function runEstiloLegendaLab() {
-  const prefix = radio("eleg-prefix");
-  const scope  = radio("eleg-scope");
-
-  const statusEl = document.getElementById("status-estilo-legenda-lab");
-  statusEl.textContent = "Processando...";
-  statusEl.className = "status info";
-  statusEl.hidden = false;
-
-  const pattern = prefix === "ambos"
-    ? /^(Foto|Figura)\s/i
-    : new RegExp(`^${prefix}\\s`, "i");
-
-  try {
-    await Word.run(async (context) => {
-      let paras;
-      if (scope === "selected") {
-        paras = context.document.getSelection().paragraphs;
-      } else {
-        paras = context.document.body.paragraphs;
-      }
-      paras.load("items");
-      await context.sync();
-
-      // carrega o texto de todos os parágrafos para filtrar
-      paras.items.forEach(p => p.load("text"));
-      await context.sync();
-
-      const targets = paras.items.filter(p => pattern.test(p.text.trim()));
-      if (targets.length === 0) {
-        statusEl.textContent = "Nenhuma legenda encontrada com esse prefixo.";
-        statusEl.className = "status warn";
-        return;
-      }
-
-      // Tenta "Caption" (Word EN) e, se falhar, "Legenda" (Word PT)
-      let styleName = "Caption";
-      try {
-        targets.forEach(p => { p.style = "Caption"; });
-        await context.sync();
-      } catch {
-        styleName = "Legenda";
-        targets.forEach(p => { p.style = "Legenda"; });
-        await context.sync();
-      }
-
-      statusEl.textContent = `✓ Estilo "${styleName}" aplicado em ${targets.length} legenda(s).`;
-      statusEl.className = "status success";
-    });
-  } catch (e) {
-    statusEl.textContent = "Erro: " + e.message;
-    statusEl.className = "status error";
-  }
 }
 
 

@@ -106,18 +106,12 @@
 <!-- ── Legendas ──────────────────────────────────────── -->
 <div id="screen-legendas" class="screen hidden">
   <div class="card">
+    <div class="card-title">Passo 1 — Adicionar legendas</div>
+
     <div class="card-title">Prefixo</div>
     <div class="radio-row">
       <label class="radio"><input type="radio" name="leg-prefix" value="Foto" checked> Foto</label>
       <label class="radio"><input type="radio" name="leg-prefix" value="Figura"> Figura</label>
-    </div>
-
-    <div class="card-title">Alinhamento</div>
-    <div class="radio-row wrap">
-      <label class="radio"><input type="radio" name="leg-align" value="left"> Esquerda</label>
-      <label class="radio"><input type="radio" name="leg-align" value="centered" checked> Centro</label>
-      <label class="radio"><input type="radio" name="leg-align" value="right"> Direita</label>
-      <label class="radio"><input type="radio" name="leg-align" value="justified"> Justificado</label>
     </div>
 
     <div class="card-title">Texto adicional <span class="optional">opcional</span></div>
@@ -129,10 +123,31 @@
       <label class="radio"><input type="radio" name="leg-scope" value="all" checked> Todas</label>
       <label class="radio"><input type="radio" name="leg-scope" value="selected"> Selecionadas</label>
     </div>
+
+    <button class="btn btn-primary" onclick="runLegendas()" style="margin-top:12px">Adicionar Legendas</button>
+    <div id="status-legendas" class="status" hidden></div>
   </div>
 
-  <button class="btn btn-primary" onclick="runLegendas()">Adicionar Legendas</button>
-  <div id="status-legendas" class="status" hidden></div>
+  <div class="card">
+    <div class="card-title">Passo 2 — Aplicar alinhamento</div>
+
+    <div class="radio-row wrap">
+      <label class="radio"><input type="radio" name="leg-align" value="left"> Esquerda</label>
+      <label class="radio"><input type="radio" name="leg-align" value="centered" checked> Centro</label>
+      <label class="radio"><input type="radio" name="leg-align" value="right"> Direita</label>
+      <label class="radio"><input type="radio" name="leg-align" value="justified"> Justificado</label>
+    </div>
+
+    <div class="card-title" style="margin-top:8px">Aplicar em</div>
+    <div class="radio-row">
+      <label class="radio"><input type="radio" name="leg-align-scope" value="foto" checked> Foto</label>
+      <label class="radio"><input type="radio" name="leg-align-scope" value="figura"> Figura</label>
+      <label class="radio"><input type="radio" name="leg-align-scope" value="ambos"> Ambos</label>
+    </div>
+
+    <button class="btn btn-primary" onclick="runLegendasAlign()" style="margin-top:12px">Aplicar Alinhamento</button>
+    <div id="status-legendas-align" class="status" hidden></div>
+  </div>
 </div>
 
 <!-- ── Redimensionar ─────────────────────────────────── -->
@@ -260,104 +275,7 @@
 
 <!-- ── Lab home (menu secreto — 5 toques no título) ─────── -->
 <div id="screen-lab" class="screen hidden">
-  <div class="tool-grid">
-    <button class="tool-card" onclick="showScreen('legendas-lab')">
-      <span class="tool-emoji">&#127991;&#65039;</span>
-      <span class="tool-label">Legendas</span>
-      <span class="tool-desc">Adicionar legendas às imagens</span>
-    </button>
-    <button class="tool-card" onclick="showScreen('estilo-legenda-lab')">
-      <span class="tool-emoji">&#127912;</span>
-      <span class="tool-label">Estilo da Legenda</span>
-      <span class="tool-desc">Aplicar estilo Caption nas legendas</span>
-    </button>
-    <button class="tool-card" onclick="showScreen('manter-lab')">
-      <span class="tool-emoji">&#128204;</span>
-      <span class="tool-label">Manter com próximo</span>
-      <span class="tool-desc">Aplicar "manter com o próximo" em todas as fotos</span>
-    </button>
-  </div>
   <div id="lab-version" style="text-align:center;font-size:11px;color:#aaa;margin-top:14px;"></div>
-</div>
-
-<!-- ── Lab: Manter com o próximo ──────────────────────────── -->
-<div id="screen-manter-lab" class="screen hidden">
-  <div class="card">
-    <div class="card-title">Manter foto com o próximo</div>
-    <p class="hint">Marca "Manter com o próximo" em todas as imagens do documento, impedindo que a foto fique em uma página e a legenda em outra.</p>
-    <button class="btn btn-primary" onclick="runManterLab()" style="margin-top:12px">Aplicar em todas as fotos</button>
-    <div id="status-manter-lab" class="status" hidden></div>
-  </div>
-</div>
-
-<!-- ── Lab: Estilo da Legenda ─────────────────────────────── -->
-<div id="screen-estilo-legenda-lab" class="screen hidden">
-  <div class="card">
-    <div class="card-title">Buscar legendas por prefixo</div>
-    <div class="radio-row">
-      <label class="radio"><input type="radio" name="eleg-prefix" value="Foto" checked> Foto</label>
-      <label class="radio"><input type="radio" name="eleg-prefix" value="Figura"> Figura</label>
-      <label class="radio"><input type="radio" name="eleg-prefix" value="ambos"> Ambos</label>
-    </div>
-
-    <div class="card-title">Aplicar em</div>
-    <div class="radio-row">
-      <label class="radio"><input type="radio" name="eleg-scope" value="all" checked> Todo o documento</label>
-      <label class="radio"><input type="radio" name="eleg-scope" value="selected"> Selecionadas</label>
-    </div>
-  </div>
-
-  <button class="btn btn-primary" onclick="runEstiloLegendaLab()">Aplicar Estilo Caption</button>
-  <div id="status-estilo-legenda-lab" class="status" hidden></div>
-</div>
-
-<!-- ── Lab: Legendas ─────────────────────────────────────── -->
-<div id="screen-legendas-lab" class="screen hidden">
-
-  <div class="card">
-    <div class="card-title">Passo 1 — Adicionar legendas</div>
-
-    <div class="card-title">Prefixo</div>
-    <div class="radio-row">
-      <label class="radio"><input type="radio" name="xleg-prefix" value="Foto" checked> Foto</label>
-      <label class="radio"><input type="radio" name="xleg-prefix" value="Figura"> Figura</label>
-    </div>
-
-    <div class="card-title">Texto adicional <span class="optional">opcional</span></div>
-    <input type="text" id="xleg-texto" placeholder="ex: Painéis solares na cobertura">
-    <p class="hint">Resultado: Foto 1 - [seu texto]</p>
-
-    <div class="card-title">Aplicar em</div>
-    <div class="radio-row">
-      <label class="radio"><input type="radio" name="xleg-scope" value="all" checked> Todas</label>
-      <label class="radio"><input type="radio" name="xleg-scope" value="selected"> Selecionadas</label>
-    </div>
-
-    <button class="btn btn-primary" onclick="runLegendasLab()" style="margin-top:12px">Adicionar Legendas</button>
-    <div id="status-legendas-lab" class="status" hidden></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Passo 2 — Aplicar alinhamento</div>
-
-    <div class="radio-row wrap">
-      <label class="radio"><input type="radio" name="xleg-align" value="left"> Esquerda</label>
-      <label class="radio"><input type="radio" name="xleg-align" value="centered" checked> Centro</label>
-      <label class="radio"><input type="radio" name="xleg-align" value="right"> Direita</label>
-      <label class="radio"><input type="radio" name="xleg-align" value="justified"> Justificado</label>
-    </div>
-
-    <div class="card-title" style="margin-top:8px">Aplicar em</div>
-    <div class="radio-row">
-      <label class="radio"><input type="radio" name="xleg-align-scope" value="foto" checked> Foto</label>
-      <label class="radio"><input type="radio" name="xleg-align-scope" value="figura"> Figura</label>
-      <label class="radio"><input type="radio" name="xleg-align-scope" value="ambos"> Ambos</label>
-    </div>
-
-    <button class="btn btn-primary" onclick="runLegendasLabAlign()" style="margin-top:12px">Aplicar Alinhamento</button>
-    <div id="status-legendas-lab-align" class="status" hidden></div>
-  </div>
-
 </div>
 
 <div id="screen-expired" class="screen hidden">
