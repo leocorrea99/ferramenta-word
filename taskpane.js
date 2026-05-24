@@ -1,7 +1,7 @@
 /* global Office, Word */
 
 const CM = 28.35; // centimeters to points
-const LAB_VERSION = "24/05 · 13:40";
+const LAB_VERSION = "24/05 · 13:20";
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
@@ -297,9 +297,17 @@ async function runLegendasLab() {
       }
       await context.sync();
 
-      // Aplica keepWithNext nas fotos DEPOIS de tudo para garantir que foto e legenda fiquem juntas
-      for (const pic of photosComLegenda) {
-        pic.paragraph.keepWithNext = true;
+      // Varre todos os parágrafos: qualquer parágrafo imediatamente antes de uma legenda
+      // recebe keepWithNext, independente de proxy ou ordem de operações
+      const allParas = context.document.body.paragraphs;
+      allParas.load("items");
+      await context.sync();
+      allParas.items.forEach(p => p.load("text"));
+      await context.sync();
+      for (let i = 0; i < allParas.items.length - 1; i++) {
+        if (/^(Foto|Figura)\s/.test(allParas.items[i + 1].text.trim())) {
+          allParas.items[i].keepWithNext = true;
+        }
       }
       await context.sync();
 
