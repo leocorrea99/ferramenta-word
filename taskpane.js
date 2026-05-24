@@ -1,7 +1,7 @@
 /* global Office, Word */
 
 const CM = 28.35; // centimeters to points
-const LAB_VERSION = "24/05 · 13:50";
+const LAB_VERSION = "24/05 · 14:05";
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
@@ -298,15 +298,6 @@ async function runLegendasLab() {
       }
       await context.sync();
 
-      // Aplica keepWithNext em TODAS as fotos do documento (não só nas novas)
-      const allPics = context.document.body.inlinePictures;
-      allPics.load("items");
-      await context.sync();
-      for (const pic of allPics.items) {
-        pic.paragraph.keepWithNext = true;
-      }
-      await context.sync();
-
       const added = placeholders.length;
       const skipped = n - added;
       const msg = skipped > 0
@@ -315,6 +306,18 @@ async function runLegendasLab() {
       statusEl.textContent = msg + " Use o Passo 2 para ajustar o alinhamento.";
       statusEl.className = "status success";
     });
+
+    // Word.run separado para keepWithNext — proxies frescos após todas as inserções
+    await Word.run(async (context) => {
+      const allPics = context.document.body.inlinePictures;
+      allPics.load("items");
+      await context.sync();
+      for (const pic of allPics.items) {
+        pic.paragraph.keepWithNext = true;
+      }
+      await context.sync();
+    });
+
   } catch (e) {
     statusEl.textContent = "Erro: " + e.message;
     statusEl.className = "status error";
