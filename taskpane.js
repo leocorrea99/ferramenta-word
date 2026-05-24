@@ -225,6 +225,68 @@ async function runLegendas() {
   });
 }
 
+// ── Lab: cópia da ferramenta de Legendas para testes ─────────────────────────
+
+async function runLegendasLab() {
+  const prefix = radio("xleg-prefix");
+  const align  = radio("xleg-align");
+  const scope  = radio("xleg-scope");
+  const texto  = document.getElementById("xleg-texto").value.trim();
+  const jcMap  = { left: "left", centered: "center", right: "right", justified: "both" };
+  const jc     = jcMap[align] || "center";
+
+  const statusEl = document.getElementById("status-legendas-lab");
+  statusEl.textContent = "Processando...";
+  statusEl.className = "status info";
+  statusEl.hidden = false;
+
+  try {
+    await Word.run(async (context) => {
+      const pics = getPics(context, scope);
+      pics.load("items");
+      await context.sync();
+
+      const n = pics.items.length;
+      if (n === 0) throw new Error("Nenhuma imagem encontrada.");
+
+      const nextParas = pics.items.map(pic => pic.paragraph.getNextOrNullObject());
+      nextParas.forEach(p => p.load("text"));
+      await context.sync();
+
+      const placeholders = [];
+      for (let i = n - 1; i >= 0; i--) {
+        const next = nextParas[i];
+        if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) continue;
+        const ph = pics.items[i].getRange().insertParagraph("__lb__", "After");
+        placeholders.push(ph);
+      }
+      if (placeholders.length === 0) {
+        statusEl.textContent = "Todas as imagens já têm legenda.";
+        statusEl.className = "status warn";
+        return;
+      }
+      await context.sync();
+
+      const ooxml = buildPkgOoxml(prefix, jc, texto);
+      for (const ph of placeholders) {
+        ph.getRange("Whole").insertOoxml(ooxml, "Replace");
+      }
+      await context.sync();
+
+      const added = placeholders.length;
+      const skipped = n - added;
+      const msg = skipped > 0
+        ? `✓ ${added} legenda(s) adicionada(s) (${skipped} já tinham).`
+        : `✓ ${added} legenda(s) adicionada(s).`;
+      statusEl.textContent = msg + " Pressione F9 para atualizar a numeração.";
+      statusEl.className = "status success";
+    });
+  } catch (e) {
+    statusEl.textContent = "Erro: " + e.message;
+    statusEl.className = "status error";
+  }
+}
+
 // ── Tool: Redimensionar ───────────────────────────────────────────────────────
 
 async function runRedimensionar() {

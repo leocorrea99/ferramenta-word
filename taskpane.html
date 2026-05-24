@@ -290,6 +290,39 @@
     </div>
   </div>
 
+  <!-- ── Legendas Lab (cópia da ferramenta atual para testes) ── -->
+  <div class="card">
+    <div class="card-title">Legendas Lab</div>
+
+    <div class="card-title">Prefixo</div>
+    <div class="radio-row">
+      <label class="radio"><input type="radio" name="xleg-prefix" value="Foto" checked> Foto</label>
+      <label class="radio"><input type="radio" name="xleg-prefix" value="Figura"> Figura</label>
+    </div>
+
+    <div class="card-title">Alinhamento</div>
+    <div class="radio-row wrap">
+      <label class="radio"><input type="radio" name="xleg-align" value="left"> Esquerda</label>
+      <label class="radio"><input type="radio" name="xleg-align" value="centered" checked> Centro</label>
+      <label class="radio"><input type="radio" name="xleg-align" value="right"> Direita</label>
+      <label class="radio"><input type="radio" name="xleg-align" value="justified"> Justificado</label>
+    </div>
+
+    <div class="card-title">Texto adicional <span class="optional">opcional</span></div>
+    <input type="text" id="xleg-texto" placeholder="ex: Painéis solares na cobertura">
+    <p class="hint">Resultado: Foto 1 - [seu texto]</p>
+
+    <div class="card-title">Aplicar em</div>
+    <div class="radio-row">
+      <label class="radio"><input type="radio" name="xleg-scope" value="all" checked> Todas</label>
+      <label class="radio"><input type="radio" name="xleg-scope" value="selected"> Selecionadas</label>
+    </div>
+
+    <button class="btn btn-primary" onclick="runLegendasLab()" style="margin-top:12px">Adicionar Legendas (Lab)</button>
+    <div id="status-legendas-lab" class="status" hidden></div>
+  </div>
+
+  <!-- ── Versão 17/05 ── -->
   <div class="card">
     <div class="card-title">Versão 17/05 — Texto simples</div>
     <p class="hint">insertParagraph com texto e número sequencial fixo. Sem SEQ field, sem estilo Caption.</p>
