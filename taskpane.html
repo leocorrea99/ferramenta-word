@@ -98,6 +98,12 @@
       <span class="tool-desc">Assistente com GPT-4o</span>
     </button>
 
+    <button class="tool-card" onclick="showScreen('legenda-dev')">
+      <span class="tool-emoji">&#128295;</span>
+      <span class="tool-label">Legenda Dev</span>
+      <span class="tool-desc">Nova ferramenta de legenda</span>
+    </button>
+
   </div>
 
   <button class="btn-logout" onclick="doLogout()">Sair da conta</button>
@@ -259,6 +265,23 @@
 </div>
 
 <!-- ── Assinatura expirada ────────────────────────────── -->
+<!-- ── Legenda Dev ────────────────────────────────────── -->
+<div id="screen-legenda-dev" class="screen hidden">
+  <div class="card">
+    <div class="card-title">Passo 1 — Texto simples</div>
+    <p class="hint">Selecione uma imagem no Word e clique no botão. Vamos inserir um parágrafo de texto simples abaixo dela.</p>
+    <button class="btn btn-primary" onclick="legendaDevStep1()">Inserir parágrafo simples</button>
+    <div id="status-legenda-dev-1" class="status" hidden></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Passo 2 — Com campo SEQ (OOXML)</div>
+    <p class="hint">Selecione uma imagem e clique. Insere via OOXML com campo SEQ de numeração automática.</p>
+    <button class="btn btn-primary" onclick="legendaDevStep2()">Inserir com campo SEQ</button>
+    <div id="status-legenda-dev-2" class="status" hidden></div>
+  </div>
+</div>
+
 <div id="screen-expired" class="screen hidden">
   <div class="expired-card">
     <div class="expired-icon">&#128274;</div>
