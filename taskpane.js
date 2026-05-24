@@ -277,6 +277,7 @@ async function runLegendasLab() {
 
       const ooxml = buildPkgOoxml(prefix, jc, texto);
       for (const ph of placeholders) {
+        ph.alignment = align; // força o alinhamento antes do replacement — a marca de parágrafo herda o alinhamento da foto
         ph.getRange("Whole").insertOoxml(ooxml, "Replace");
       }
       await context.sync();
