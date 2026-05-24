@@ -191,7 +191,7 @@ async function runLegendas() {
       const next = nextParas[i];
       if (!next.isNullObject && /^(Foto|Figura)\s*\d/.test(next.text.trim())) continue;
       const ph = pics.items[i].paragraph.insertParagraph("", "After");
-      ph.styleBuiltIn = Word.StyleBuiltIn.caption;
+      ph.style = "Caption";
       placeholders.push(ph);
     }
 
