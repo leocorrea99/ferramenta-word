@@ -189,7 +189,7 @@ async function runLegendas() {
     for (let i = n - 1; i >= 0; i--) {
       const next = nextParas[i];
       if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) continue;
-      pics.items[i].getRange().insertOoxml(buildPkgOoxml(prefix, jc, texto), "After");
+      pics.items[i].paragraph.getRange("Whole").insertOoxml(buildPkgOoxml(prefix, jc, texto), "After");
       added++;
     }
     await context.sync();
