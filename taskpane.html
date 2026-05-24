@@ -271,8 +271,23 @@
       <span class="tool-label">Estilo da Legenda</span>
       <span class="tool-desc">Aplicar estilo Caption nas legendas</span>
     </button>
+    <button class="tool-card" onclick="showScreen('manter-lab')">
+      <span class="tool-emoji">&#128204;</span>
+      <span class="tool-label">Manter com próximo</span>
+      <span class="tool-desc">Aplicar "manter com o próximo" em todas as fotos</span>
+    </button>
   </div>
   <div id="lab-version" style="text-align:center;font-size:11px;color:#aaa;margin-top:14px;"></div>
+</div>
+
+<!-- ── Lab: Manter com o próximo ──────────────────────────── -->
+<div id="screen-manter-lab" class="screen hidden">
+  <div class="card">
+    <div class="card-title">Manter foto com o próximo</div>
+    <p class="hint">Marca "Manter com o próximo" em todas as imagens do documento, impedindo que a foto fique em uma página e a legenda em outra.</p>
+    <button class="btn btn-primary" onclick="runManterLab()" style="margin-top:12px">Aplicar em todas as fotos</button>
+    <div id="status-manter-lab" class="status" hidden></div>
+  </div>
 </div>
 
 <!-- ── Lab: Estilo da Legenda ─────────────────────────────── -->

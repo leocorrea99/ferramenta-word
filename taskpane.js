@@ -1,7 +1,7 @@
 /* global Office, Word */
 
 const CM = 28.35; // centimeters to points
-const LAB_VERSION = "24/05 · 14:20";
+const LAB_VERSION = "24/05 · 14:35";
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
@@ -122,6 +122,7 @@ const TITLES = {
   lab:           "Lab",
   "legendas-lab":       "Legendas",
   "estilo-legenda-lab": "Estilo da Legenda",
+  "manter-lab":         "Manter com próximo",
 };
 
 function showScreen(name) {
@@ -678,6 +679,48 @@ function buildPkgOoxml(prefix, jc, texto, styleId = "Caption") {
     </pkg:xmlData>
   </pkg:part>
 </pkg:package>`;
+}
+
+// ── Lab: Manter com o próximo ─────────────────────────────────────────────────
+
+async function runManterLab() {
+  const statusEl = document.getElementById("status-manter-lab");
+  statusEl.textContent = "Processando...";
+  statusEl.className = "status info";
+  statusEl.hidden = false;
+
+  try {
+    await Word.run(async (context) => {
+      const paras = context.document.body.paragraphs;
+      paras.load("items");
+      await context.sync();
+
+      const picCols = paras.items.map(p => p.inlinePictures);
+      picCols.forEach(c => c.load("items"));
+      await context.sync();
+
+      let count = 0;
+      paras.items.forEach((p, i) => {
+        if (picCols[i].items.length > 0) {
+          p.keepWithNext = true;
+          count++;
+        }
+      });
+
+      if (count === 0) {
+        statusEl.textContent = "Nenhuma imagem encontrada no documento.";
+        statusEl.className = "status warn";
+        return;
+      }
+
+      await context.sync();
+      statusEl.textContent = `✓ "Manter com o próximo" aplicado em ${count} imagem(ns).`;
+      statusEl.className = "status success";
+    });
+  } catch (e) {
+    statusEl.textContent = "Erro: " + e.message;
+    statusEl.className = "status error";
+  }
 }
 
 // ── Lab: Estilo da Legenda ────────────────────────────────────────────────────
