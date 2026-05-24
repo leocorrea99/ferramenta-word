@@ -98,12 +98,6 @@
       <span class="tool-desc">Assistente com GPT-4o</span>
     </button>
 
-    <button class="tool-card" onclick="showScreen('legenda-dev')">
-      <span class="tool-emoji">&#128295;</span>
-      <span class="tool-label">Legenda Dev</span>
-      <span class="tool-desc">Nova ferramenta de legenda</span>
-    </button>
-
   </div>
 
   <button class="btn-logout" onclick="doLogout()">Sair da conta</button>
@@ -262,38 +256,6 @@
     <button id="btn-send" class="btn-send" onclick="chatSend()">&#9658;</button>
   </div>
 
-</div>
-
-<!-- ── Assinatura expirada ────────────────────────────── -->
-<!-- ── Legenda Dev ────────────────────────────────────── -->
-<div id="screen-legenda-dev" class="screen hidden">
-  <div class="card">
-    <div class="card-title">Passo 1 — Texto simples</div>
-    <p class="hint">Selecione uma imagem no Word e clique no botão. Vamos inserir um parágrafo de texto simples abaixo dela.</p>
-    <button class="btn btn-primary" onclick="legendaDevStep1()">Inserir parágrafo simples</button>
-    <div id="status-legenda-dev-1" class="status" hidden></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Passo 2 — paragraph.insertOoxml (direto)</div>
-    <p class="hint">Selecione uma imagem. Tenta inserir OOXML direto no parágrafo.</p>
-    <button class="btn btn-primary" onclick="legendaDevStep2()">Inserir com campo SEQ</button>
-    <div id="status-legenda-dev-2" class="status" hidden></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Passo 3 — range.insertOoxml com w:document</div>
-    <p class="hint">Selecione uma imagem. Cria parágrafo, substitui com OOXML no formato w:document.</p>
-    <button class="btn btn-primary" onclick="legendaDevStep3()">Testar w:document</button>
-    <div id="status-legenda-dev-3" class="status" hidden></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Passo 4 — range.insertOoxml só com &lt;w:p&gt;</div>
-    <p class="hint">Selecione uma imagem. Usa apenas o elemento &lt;w:p&gt; sem wrapper de documento.</p>
-    <button class="btn btn-primary" onclick="legendaDevStep4()">Testar só w:p</button>
-    <div id="status-legenda-dev-4" class="status" hidden></div>
-  </div>
 </div>
 
 <div id="screen-expired" class="screen hidden">

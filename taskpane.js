@@ -118,7 +118,6 @@ const TITLES = {
   paragrafo:     "Parágrafo",
   recuo:         "Recuo",
   chat:          "Chat IA",
-  "legenda-dev": "Legenda Dev",
 };
 
 function showScreen(name) {
@@ -183,35 +182,25 @@ async function runLegendas() {
     nextParas.forEach(p => p.load("text"));
     await context.sync();
 
-    const jcMap = { left: "left", centered: "center", right: "right", justified: "both" };
-    const jc = jcMap[align] || "center";
-
-    const ooxml = buildCaptionOoxml(prefix, jc, texto);
     let added = 0;
     for (let i = n - 1; i >= 0; i--) {
       const next = nextParas[i];
-      if (!next.isNullObject && /^(Foto|Figura)\s*\d/.test(next.text.trim())) continue;
-      pics.items[i].paragraph.insertOoxml(ooxml, "After");
+      if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) {
+        continue;
+      }
+      const label = texto ? `${prefix} ${i + 1} - ${texto}` : `${prefix} ${i + 1}`;
+      const para = pics.items[i].getRange().insertParagraph(label, "After");
+      if (align) para.alignment = align;
       added++;
     }
-
-    if (added === 0) return "Todas as imagens já têm legenda.";
     await context.sync();
 
+    if (added === 0) return "Todas as imagens já têm legenda.";
     const skipped = n - added;
     return skipped > 0
       ? `${added} legenda(s) adicionada(s) (${skipped} já tinham).`
       : `${added} legenda(s) adicionada(s).`;
   });
-}
-
-function xmlEsc(str) {
-  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
-
-function buildCaptionOoxml(prefix, jc, texto) {
-  const suffix = texto ? `<w:r><w:t xml:space="preserve"> - ${xmlEsc(texto)}</w:t></w:r>` : "";
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:pPr><w:jc w:val="${jc}"/></w:pPr><w:r><w:t xml:space="preserve">${xmlEsc(prefix)} </w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> SEQ ${xmlEsc(prefix)} \\* ARABIC </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>${suffix}</w:p></w:body></w:document>`;
 }
 
 // ── Tool: Redimensionar ───────────────────────────────────────────────────────
@@ -486,120 +475,3 @@ function sub(text) {
   document.getElementById("header-sub").textContent = text;
 }
 
-// ── Legenda Dev ───────────────────────────────────────────────────────────────
-
-function setDevStatus(step, msg, type) {
-  const el = document.getElementById("status-legenda-dev-" + step);
-  el.textContent = msg;
-  el.className = "status " + type;
-  el.hidden = false;
-}
-
-// Passo 1: texto puro, sem OOXML
-async function legendaDevStep1() {
-  setDevStatus(1, "Processando...", "info");
-  try {
-    await Word.run(async (context) => {
-      const sel = context.document.getSelection();
-      sel.load("text");
-      await context.sync();
-
-      const pics = sel.inlinePictures;
-      pics.load("items");
-      await context.sync();
-
-      if (pics.items.length === 0) throw new Error("Selecione uma imagem no Word primeiro.");
-
-      const pic = pics.items[0];
-      const newPara = pic.paragraph.insertParagraph("Foto 1 — legenda de teste", "After");
-      newPara.alignment = "centered";
-      await context.sync();
-    });
-    setDevStatus(1, "✓ Parágrafo inserido! Está visível no Word?", "success");
-  } catch (e) {
-    setDevStatus(1, "Erro: " + e.message, "error");
-  }
-}
-
-// Passo 3: insertParagraph (funciona) + range.insertOoxml("Replace") com campo SEQ
-async function legendaDevStep3() {
-  setDevStatus(3, "Processando...", "info");
-  try {
-    await Word.run(async (context) => {
-      const sel = context.document.getSelection();
-      const pics = sel.inlinePictures;
-      pics.load("items");
-      await context.sync();
-
-      if (pics.items.length === 0) throw new Error("Selecione uma imagem no Word primeiro.");
-
-      const pic = pics.items[0];
-
-      // Cria parágrafo vazio após a imagem (sabemos que isso funciona)
-      const newPara = pic.paragraph.insertParagraph("TEMP", "After");
-      newPara.alignment = "centered";
-      await context.sync();
-
-      // Agora substitui o conteúdo do parágrafo por OOXML com campo SEQ
-      const ooxml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t xml:space="preserve">Foto </w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> SEQ Foto \* ARABIC </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p></w:body></w:document>`;
-      newPara.getRange().insertOoxml(ooxml, "Replace");
-      await context.sync();
-    });
-    setDevStatus(3, "✓ Feito! Campo SEQ apareceu no Word?", "success");
-  } catch (e) {
-    setDevStatus(3, "Erro: " + e.message, "error");
-  }
-}
-
-// Passo 2: OOXML com campo SEQ
-async function legendaDevStep2() {
-  setDevStatus(2, "Processando...", "info");
-  try {
-    await Word.run(async (context) => {
-      const sel = context.document.getSelection();
-      const pics = sel.inlinePictures;
-      pics.load("items");
-      await context.sync();
-
-      if (pics.items.length === 0) throw new Error("Selecione uma imagem no Word primeiro.");
-
-      const pic = pics.items[0];
-      const ooxml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t xml:space="preserve">Foto </w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> SEQ Foto \* ARABIC </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p></w:body></w:document>`;
-
-      pic.paragraph.insertOoxml(ooxml, "After");
-      await context.sync();
-    });
-    setDevStatus(2, "✓ OOXML inserido! Está visível no Word?", "success");
-  } catch (e) {
-    setDevStatus(2, "Erro: " + e.message, "error");
-  }
-}
-
-// Passo 4: range.insertOoxml com apenas <w:p> como raiz (sem w:document)
-async function legendaDevStep4() {
-  setDevStatus(4, "Processando...", "info");
-  try {
-    await Word.run(async (context) => {
-      const sel = context.document.getSelection();
-      const pics = sel.inlinePictures;
-      pics.load("items");
-      await context.sync();
-
-      if (pics.items.length === 0) throw new Error("Selecione uma imagem no Word primeiro.");
-
-      const pic = pics.items[0];
-
-      // Insere parágrafo temporário (funciona — confirmado no Passo 1)
-      const newPara = pic.paragraph.insertParagraph("TEMP", "After");
-      await context.sync();
-
-      // Substitui com OOXML usando apenas <w:p> como raiz — sem wrapper w:document
-      const ooxml = `<w:p xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t xml:space="preserve">Foto </w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> SEQ Foto \* ARABIC </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>`;
-      newPara.getRange().insertOoxml(ooxml, "Replace");
-      await context.sync();
-    });
-    setDevStatus(4, "✓ Feito! Campo SEQ apareceu no Word?", "success");
-  } catch (e) {
-    setDevStatus(4, "Erro: " + e.message, "error");
-  }
-}
