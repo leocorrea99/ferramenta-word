@@ -212,6 +212,7 @@ async function runLegendas() {
     for (let i = n - 1; i >= 0; i--) {
       const next = nextParas[i];
       if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) continue;
+      pics.items[i].paragraph.keepWithNext = true;
       const ph = pics.items[i].getRange().insertParagraph("__lb__", "After");
       placeholders.push(ph);
     }
@@ -263,6 +264,7 @@ async function runLegendasLab() {
       for (let i = n - 1; i >= 0; i--) {
         const next = nextParas[i];
         if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) continue;
+        pics.items[i].paragraph.keepWithNext = true;
         const ph = pics.items[i].getRange().insertParagraph("__lb__", "After");
         placeholders.push(ph);
       }
