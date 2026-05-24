@@ -185,28 +185,21 @@ async function runLegendas() {
     const jcMap = { left: "left", centered: "center", right: "right", justified: "both" };
     const jc = jcMap[align] || "center";
 
-    // ── Passo 1: insere parágrafos vazios com estilo Caption (via API nativa) ──
-    const placeholders = [];
+    // Insere OOXML com estilo Caption + campo SEQ após o parágrafo de cada imagem.
+    // O OOXML define o estilo Caption internamente — Word cria o estilo no documento
+    // se ainda não existir, igual ao comportamento nativo de "Inserir Legenda".
+    const ooxml = buildCaptionOoxml(prefix, jc, texto);
+    let added = 0;
     for (let i = n - 1; i >= 0; i--) {
       const next = nextParas[i];
       if (!next.isNullObject && /^(Foto|Figura)\s*\d/.test(next.text.trim())) continue;
-      const ph = pics.items[i].paragraph.insertParagraph("", "After");
-      ph.style = "Caption";
-      placeholders.push(ph);
+      pics.items[i].paragraph.getRange("After").insertOoxml(ooxml, "Replace");
+      added++;
     }
 
-    if (placeholders.length === 0) return "Todas as imagens já têm legenda.";
+    if (added === 0) return "Todas as imagens já têm legenda.";
     await context.sync();
 
-    // ── Passo 2: insere OOXML com campo SEQ antes de cada placeholder e deleta ──
-    const ooxml = buildCaptionOoxml(prefix, jc, texto);
-    for (const ph of placeholders) {
-      ph.getRange("Start").insertOoxml(ooxml, "Before");
-      ph.delete();
-    }
-    await context.sync();
-
-    const added = placeholders.length;
     const skipped = n - added;
     return skipped > 0
       ? `${added} legenda(s) adicionada(s) (${skipped} já tinham).`
