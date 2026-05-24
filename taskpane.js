@@ -1,7 +1,7 @@
 /* global Office, Word */
 
 const CM = 28.35; // centimeters to points
-const LAB_VERSION = "24/05 · 15:40";
+const LAB_VERSION = "24/05 · 15:55";
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
@@ -691,22 +691,41 @@ async function runManterLab() {
 
   try {
     await Word.run(async (context) => {
-      const paragraphs = context.document.body.paragraphs;
-      paragraphs.load("items");
+      const body = context.document.body;
+      const ooxmlResult = body.getOoxml();
       await context.sync();
 
-      for (const p of paragraphs.items) {
-        p.inlinePictures.load("items");
-      }
-      await context.sync();
-
+      const W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+      const xmlDoc = new DOMParser().parseFromString(ooxmlResult.value, "application/xml");
+      const paras = xmlDoc.getElementsByTagNameNS(W, "p");
       let total = 0;
-      for (const p of paragraphs.items) {
-        if (p.inlinePictures.items.length > 0) {
-          p.paragraphFormat.keepWithNext = true;
-          p.paragraphFormat.keepTogether = true;
-          total++;
+
+      for (let i = 0; i < paras.length; i++) {
+        const p = paras[i];
+        const temImagem =
+          p.getElementsByTagNameNS(W, "drawing").length > 0 ||
+          p.getElementsByTagNameNS(W, "pict").length > 0;
+        if (!temImagem) continue;
+
+        // Busca ou cria w:pPr
+        let pPr = null;
+        for (let j = 0; j < p.childNodes.length; j++) {
+          const c = p.childNodes[j];
+          if (c.nodeType === 1 && c.namespaceURI === W && c.localName === "pPr") {
+            pPr = c; break;
+          }
         }
+        if (!pPr) {
+          pPr = xmlDoc.createElementNS(W, "w:pPr");
+          p.insertBefore(pPr, p.firstChild);
+        }
+
+        // Injeta w:keepNext se ainda não existir
+        if (pPr.getElementsByTagNameNS(W, "keepNext").length === 0) {
+          pPr.appendChild(xmlDoc.createElementNS(W, "w:keepNext"));
+        }
+
+        total++;
       }
 
       if (total === 0) {
@@ -715,8 +734,11 @@ async function runManterLab() {
         return;
       }
 
+      const novoOoxml = new XMLSerializer().serializeToString(xmlDoc);
+      body.insertOoxml(novoOoxml, Word.InsertLocation.replace);
       await context.sync();
-      statusEl.textContent = `✓ "Manter com o próximo" aplicado em ${total} parágrafo(s) com foto.`;
+
+      statusEl.textContent = `✓ "Manter com o próximo" aplicado em ${total} foto(s).`;
       statusEl.className = "status success";
     });
   } catch (e) {
