@@ -276,9 +276,27 @@ async function runLegendasLab() {
       }
       await context.sync();
 
+      // Fase 2a: aplica alinhamento e estilo Caption (EN) ou Legenda (PT) nos placeholders
+      // O estilo é definido na marca de parágrafo, que sobrevive ao insertOoxml Replace
+      let captionStyle = "Caption";
+      try {
+        for (const ph of placeholders) {
+          ph.alignment = align;
+          ph.style = "Caption";
+        }
+        await context.sync();
+      } catch {
+        captionStyle = "Legenda";
+        for (const ph of placeholders) {
+          ph.alignment = align;
+          ph.style = "Legenda";
+        }
+        await context.sync();
+      }
+
+      // Fase 2b: substitui o parágrafo inteiro pelo OOXML com campo SEQ
       const ooxml = buildPkgOoxml(prefix, jc, texto);
       for (const ph of placeholders) {
-        ph.alignment = align; // força o alinhamento antes do replacement — a marca de parágrafo herda o alinhamento da foto
         ph.getRange("Whole").insertOoxml(ooxml, "Replace");
       }
       await context.sync();
