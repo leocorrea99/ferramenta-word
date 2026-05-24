@@ -238,11 +238,8 @@ async function runLegendas() {
 
 async function runLegendasLab() {
   const prefix = radio("xleg-prefix");
-  const align  = radio("xleg-align");
   const scope  = radio("xleg-scope");
   const texto  = document.getElementById("xleg-texto").value.trim();
-  const jcMap  = { left: "left", centered: "center", right: "right", justified: "both" };
-  const jc     = jcMap[align] || "center";
 
   const statusEl = document.getElementById("status-legendas-lab");
   statusEl.textContent = "Processando...";
@@ -276,26 +273,19 @@ async function runLegendasLab() {
       }
       await context.sync();
 
-      // Fase 2a: aplica alinhamento e estilo Caption (EN) ou Legenda (PT) nos placeholders
-      // O estilo é definido na marca de parágrafo, que sobrevive ao insertOoxml Replace
-      let captionStyle = "Caption";
+      // Aplica estilo Caption (EN) ou Legenda (PT) nos placeholders
+      let styleName = "Caption";
       try {
-        for (const ph of placeholders) {
-          ph.alignment = align;
-          ph.style = "Caption";
-        }
+        for (const ph of placeholders) { ph.style = "Caption"; }
         await context.sync();
       } catch {
-        captionStyle = "Legenda";
-        for (const ph of placeholders) {
-          ph.alignment = align;
-          ph.style = "Legenda";
-        }
+        styleName = "Legenda";
+        for (const ph of placeholders) { ph.style = "Legenda"; }
         await context.sync();
       }
 
-      // Fase 2b: substitui o parágrafo inteiro pelo OOXML com campo SEQ
-      const ooxml = buildPkgOoxml(prefix, jc, texto);
+      // Substitui o parágrafo inteiro pelo OOXML com campo SEQ
+      const ooxml = buildPkgOoxml(prefix, "left", texto);
       for (const ph of placeholders) {
         ph.getRange("Whole").insertOoxml(ooxml, "Replace");
       }
@@ -306,7 +296,48 @@ async function runLegendasLab() {
       const msg = skipped > 0
         ? `✓ ${added} legenda(s) adicionada(s) (${skipped} já tinham).`
         : `✓ ${added} legenda(s) adicionada(s).`;
-      statusEl.textContent = msg + " Pressione F9 para atualizar a numeração.";
+      statusEl.textContent = msg + " Use o Passo 2 para ajustar o alinhamento.";
+      statusEl.className = "status success";
+    });
+  } catch (e) {
+    statusEl.textContent = "Erro: " + e.message;
+    statusEl.className = "status error";
+  }
+}
+
+async function runLegendasLabAlign() {
+  const align = radio("xleg-align");
+  const scope = radio("xleg-align-scope");
+
+  const statusEl = document.getElementById("status-legendas-lab-align");
+  statusEl.textContent = "Processando...";
+  statusEl.className = "status info";
+  statusEl.hidden = false;
+
+  const pattern = scope === "ambos"
+    ? /^(Foto|Figura)\s/i
+    : new RegExp(`^${scope.charAt(0).toUpperCase() + scope.slice(1)}\\s`, "i");
+
+  try {
+    await Word.run(async (context) => {
+      const paras = context.document.body.paragraphs;
+      paras.load("items");
+      await context.sync();
+
+      paras.items.forEach(p => p.load("text"));
+      await context.sync();
+
+      const targets = paras.items.filter(p => pattern.test(p.text.trim()));
+      if (targets.length === 0) {
+        statusEl.textContent = "Nenhuma legenda encontrada com esse prefixo.";
+        statusEl.className = "status warn";
+        return;
+      }
+
+      targets.forEach(p => { p.alignment = align; });
+      await context.sync();
+
+      statusEl.textContent = `✓ Alinhamento aplicado em ${targets.length} legenda(s).`;
       statusEl.className = "status success";
     });
   } catch (e) {
