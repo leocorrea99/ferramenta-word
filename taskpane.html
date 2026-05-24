@@ -275,10 +275,17 @@
   </div>
 
   <div class="card">
-    <div class="card-title">Passo 2 — Com campo SEQ (OOXML)</div>
-    <p class="hint">Selecione uma imagem e clique. Insere via OOXML com campo SEQ de numeração automática.</p>
+    <div class="card-title">Passo 2 — paragraph.insertOoxml (direto)</div>
+    <p class="hint">Selecione uma imagem. Tenta inserir OOXML direto no parágrafo.</p>
     <button class="btn btn-primary" onclick="legendaDevStep2()">Inserir com campo SEQ</button>
     <div id="status-legenda-dev-2" class="status" hidden></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Passo 3 — insertParagraph + range.insertOoxml</div>
+    <p class="hint">Selecione uma imagem. Cria o parágrafo com insertParagraph, depois substitui o conteúdo com OOXML + campo SEQ.</p>
+    <button class="btn btn-primary" onclick="legendaDevStep3()">Testar abordagem combinada</button>
+    <div id="status-legenda-dev-3" class="status" hidden></div>
   </div>
 </div>
 

@@ -521,6 +521,36 @@ async function legendaDevStep1() {
   }
 }
 
+// Passo 3: insertParagraph (funciona) + range.insertOoxml("Replace") com campo SEQ
+async function legendaDevStep3() {
+  setDevStatus(3, "Processando...", "info");
+  try {
+    await Word.run(async (context) => {
+      const sel = context.document.getSelection();
+      const pics = sel.inlinePictures;
+      pics.load("items");
+      await context.sync();
+
+      if (pics.items.length === 0) throw new Error("Selecione uma imagem no Word primeiro.");
+
+      const pic = pics.items[0];
+
+      // Cria parágrafo vazio após a imagem (sabemos que isso funciona)
+      const newPara = pic.paragraph.insertParagraph("TEMP", "After");
+      newPara.alignment = "centered";
+      await context.sync();
+
+      // Agora substitui o conteúdo do parágrafo por OOXML com campo SEQ
+      const ooxml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t xml:space="preserve">Foto </w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> SEQ Foto \* ARABIC </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p></w:body></w:document>`;
+      newPara.getRange().insertOoxml(ooxml, "Replace");
+      await context.sync();
+    });
+    setDevStatus(3, "✓ Feito! Campo SEQ apareceu no Word?", "success");
+  } catch (e) {
+    setDevStatus(3, "Erro: " + e.message, "error");
+  }
+}
+
 // Passo 2: OOXML com campo SEQ
 async function legendaDevStep2() {
   setDevStatus(2, "Processando...", "info");
