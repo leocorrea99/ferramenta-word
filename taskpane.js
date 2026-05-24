@@ -1,7 +1,7 @@
 /* global Office, Word */
 
 const CM = 28.35; // centimeters to points
-const LAB_VERSION = "24/05 · 14:05";
+const LAB_VERSION = "24/05 · 14:20";
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
@@ -307,14 +307,21 @@ async function runLegendasLab() {
       statusEl.className = "status success";
     });
 
-    // Word.run separado para keepWithNext — proxies frescos após todas as inserções
+    // Word.run separado: itera parágrafos → verifica quais têm foto → marca keepWithNext
     await Word.run(async (context) => {
-      const allPics = context.document.body.inlinePictures;
-      allPics.load("items");
+      const paras = context.document.body.paragraphs;
+      paras.load("items");
       await context.sync();
-      for (const pic of allPics.items) {
-        pic.paragraph.keepWithNext = true;
-      }
+
+      const picCols = paras.items.map(p => p.inlinePictures);
+      picCols.forEach(c => c.load("items"));
+      await context.sync();
+
+      paras.items.forEach((p, i) => {
+        if (picCols[i].items.length > 0) {
+          p.keepWithNext = true;
+        }
+      });
       await context.sync();
     });
 
