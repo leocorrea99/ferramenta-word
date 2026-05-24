@@ -1,7 +1,7 @@
 /* global Office, Word */
 
 const CM = 28.35; // centimeters to points
-const LAB_VERSION = "24/05 · 13:20";
+const LAB_VERSION = "24/05 · 13:35";
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
@@ -291,7 +291,8 @@ async function runLegendasLab() {
       }
 
       // Substitui o parágrafo inteiro pelo OOXML com campo SEQ
-      const ooxml = buildPkgOoxml(prefix, "left", texto);
+      // usa o styleId detectado (Caption em EN, Legenda em PT)
+      const ooxml = buildPkgOoxml(prefix, "left", texto, styleName);
       for (const ph of placeholders) {
         ph.getRange("Whole").insertOoxml(ooxml, "Replace");
       }
@@ -643,7 +644,7 @@ function xmlEsc(str) {
 }
 
 // pkg:package OOXML com estilo Caption + campo SEQ (versões e4ae5c5 / 69def05)
-function buildPkgOoxml(prefix, jc, texto) {
+function buildPkgOoxml(prefix, jc, texto, styleId = "Caption") {
   const extraRun = texto ? `<w:r><w:t xml:space="preserve"> - ${xmlEsc(texto)}</w:t></w:r>` : "";
   return `<pkg:package xmlns:pkg="http://schemas.microsoft.com/office/2006/xmlPackage">
   <pkg:part pkg:name="/_rels/.rels" pkg:contentType="application/vnd.openxmlformats-package.relationships+xml" pkg:padding="512">
@@ -658,7 +659,7 @@ function buildPkgOoxml(prefix, jc, texto) {
       <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
         <w:body>
           <w:p>
-            <w:pPr><w:pStyle w:val="Caption"/><w:jc w:val="${jc}"/></w:pPr>
+            <w:pPr><w:pStyle w:val="${styleId}"/><w:jc w:val="${jc}"/></w:pPr>
             <w:r><w:t xml:space="preserve">${xmlEsc(prefix)} </w:t></w:r>
             <w:r><w:fldChar w:fldCharType="begin"/></w:r>
             <w:r><w:instrText xml:space="preserve"> SEQ ${xmlEsc(prefix)} \\* ARABIC </w:instrText></w:r>
