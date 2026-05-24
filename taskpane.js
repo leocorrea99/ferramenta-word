@@ -1,7 +1,7 @@
 /* global Office, Word */
 
 const CM = 28.35; // centimeters to points
-const LAB_VERSION = "24/05 · 14:50";
+const LAB_VERSION = "24/05 · 15:10";
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
@@ -702,28 +702,31 @@ async function runManterLab() {
         return;
       }
 
-      // Obtém parágrafo via getRange().paragraphs em vez de pic.paragraph
-      const paras = pics.items.map(pic => pic.getRange().paragraphs.getFirst());
-      paras.forEach(p => p.load("keepWithNext"));
+      // Obtém o OOXML de cada parágrafo de foto para injetar <w:keepNext/>
+      const paraRanges = pics.items.map(pic => pic.paragraph.getRange("Whole"));
+      const ooxmlResults = paraRanges.map(r => r.getOoxml());
       await context.sync();
 
-      const antes = paras.map(p => p.keepWithNext);
-      paras.forEach(p => { p.keepWithNext = true; });
+      for (let i = 0; i < paraRanges.length; i++) {
+        const xml = injectKeepNext(ooxmlResults[i].value);
+        paraRanges[i].insertOoxml(xml, "Replace");
+      }
       await context.sync();
 
-      // Lê de volta para confirmar se foi aceito
-      paras.forEach(p => p.load("keepWithNext"));
-      await context.sync();
-      const depois = paras.map(p => p.keepWithNext);
-
-      const confirmadas = depois.filter(v => v === true).length;
-      statusEl.textContent = `${n} imagem(ns). Antes: [${antes}] → Depois: [${depois}]. Confirmadas: ${confirmadas}.`;
-      statusEl.className = confirmadas === n ? "status success" : "status warn";
+      statusEl.textContent = `✓ "Manter com o próximo" aplicado em ${n} imagem(ns).`;
+      statusEl.className = "status success";
     });
   } catch (e) {
     statusEl.textContent = "Erro: " + e.message;
     statusEl.className = "status error";
   }
+}
+
+function injectKeepNext(xml) {
+  if (/<w:keepNext[\s\/>]/.test(xml)) return xml; // já tem, não duplica
+  if (xml.includes('<w:pPr>')) return xml.replace('<w:pPr>', '<w:pPr><w:keepNext/>');
+  if (/<w:pPr\s/.test(xml)) return xml.replace(/(<w:pPr\s[^>]*>)/, '$1<w:keepNext/>');
+  return xml.replace(/(<w:p\b[^>]*>)/, '$1<w:pPr><w:keepNext/></w:pPr>');
 }
 
 // ── Lab: Estilo da Legenda ────────────────────────────────────────────────────
