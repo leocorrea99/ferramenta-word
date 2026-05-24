@@ -1,7 +1,7 @@
 /* global Office, Word */
 
 const CM = 28.35; // centimeters to points
-const LAB_VERSION = "24/05 · 16:10";
+const LAB_VERSION = "24/05 · 16:25";
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
@@ -397,7 +397,9 @@ async function runLegendasLabAlign() {
       targets.forEach(p => { p.alignment = align; });
       await context.sync();
 
-      statusEl.textContent = `✓ Alinhamento aplicado em ${targets.length} legenda(s).`;
+      await aplicarKeepNextBody(context);
+
+      statusEl.textContent = `✓ Alinhamento aplicado em ${targets.length} legenda(s) + "manter com o próximo" nas fotos.`;
       statusEl.className = "status success";
     });
   } catch (e) {
