@@ -258,6 +258,83 @@
 
 </div>
 
+<!-- ── Lab (menu secreto) ─────────────────────────────── -->
+<div id="screen-lab" class="screen hidden">
+
+  <div class="card">
+    <div class="two-col">
+      <div>
+        <div class="card-title">Prefixo</div>
+        <div class="radio-row">
+          <label class="radio"><input type="radio" name="lab-prefix" value="Foto" checked> Foto</label>
+          <label class="radio"><input type="radio" name="lab-prefix" value="Figura"> Figura</label>
+        </div>
+      </div>
+      <div>
+        <div class="card-title">Aplicar em</div>
+        <div class="radio-row">
+          <label class="radio"><input type="radio" name="lab-scope" value="all" checked> Todas</label>
+          <label class="radio"><input type="radio" name="lab-scope" value="selected"> Selecionadas</label>
+        </div>
+      </div>
+    </div>
+    <div class="field" style="margin-top:8px">
+      <label for="lab-texto">Texto adicional (opcional)</label>
+      <input type="text" id="lab-texto" placeholder="ex: Painéis solares">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">V1 — Texto simples (atual)</div>
+    <p class="hint">insertParagraph — sem OOXML, sem SEQ field, sem estilo Caption.</p>
+    <button class="btn btn-primary" onclick="runLabV1()">Testar V1</button>
+    <div id="lab-status-1" class="status" hidden></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">V2 — pkg:package + getRange().insertOoxml("After")</div>
+    <p class="hint">OOXML com estilo Caption e SEQ field. Inserido via getRange() da imagem.</p>
+    <button class="btn btn-primary" onclick="runLabV2()">Testar V2</button>
+    <div id="lab-status-2" class="status" hidden></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">V3 — pkg:package + paragraph.getRange("Whole").insertOoxml("After")</div>
+    <p class="hint">Mesmo OOXML da V2 mas inserido via parágrafo completo da imagem.</p>
+    <button class="btn btn-primary" onclick="runLabV3()">Testar V3</button>
+    <div id="lab-status-3" class="status" hidden></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">V4 — w:document COM Caption + paragraph.insertOoxml("After")</div>
+    <p class="hint">OOXML compacto com estilo Caption e SEQ field, via paragraph.insertOoxml.</p>
+    <button class="btn btn-primary" onclick="runLabV4()">Testar V4</button>
+    <div id="lab-status-4" class="status" hidden></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">V5 — 2 passos: Caption style + insertOoxml Before</div>
+    <p class="hint">Cria parágrafo com estilo Caption, depois insere OOXML antes e deleta o placeholder.</p>
+    <button class="btn btn-primary" onclick="runLabV5()">Testar V5</button>
+    <div id="lab-status-5" class="status" hidden></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">V6 — w:document COM Caption + getRange("After").insertOoxml("Replace")</div>
+    <p class="hint">OOXML com Caption inserido via getRange("After") do parágrafo.</p>
+    <button class="btn btn-primary" onclick="runLabV6()">Testar V6</button>
+    <div id="lab-status-6" class="status" hidden></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">V7 — w:document SEM Caption + paragraph.insertOoxml("After")</div>
+    <p class="hint">SEQ field sem estilo Caption — numeração automática mas sem formatação de legenda.</p>
+    <button class="btn btn-primary" onclick="runLabV7()">Testar V7</button>
+    <div id="lab-status-7" class="status" hidden></div>
+  </div>
+
+</div>
+
 <div id="screen-expired" class="screen hidden">
   <div class="expired-card">
     <div class="expired-icon">&#128274;</div>
