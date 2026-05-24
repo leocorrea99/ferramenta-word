@@ -1,7 +1,7 @@
 /* global Office, Word */
 
 const CM = 28.35; // centimeters to points
-const LAB_VERSION = "24/05 · 14:35";
+const LAB_VERSION = "24/05 · 14:50";
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
@@ -691,31 +691,34 @@ async function runManterLab() {
 
   try {
     await Word.run(async (context) => {
-      const paras = context.document.body.paragraphs;
-      paras.load("items");
+      const pics = context.document.body.inlinePictures;
+      pics.load("items");
       await context.sync();
 
-      const picCols = paras.items.map(p => p.inlinePictures);
-      picCols.forEach(c => c.load("items"));
-      await context.sync();
-
-      let count = 0;
-      paras.items.forEach((p, i) => {
-        if (picCols[i].items.length > 0) {
-          p.keepWithNext = true;
-          count++;
-        }
-      });
-
-      if (count === 0) {
+      const n = pics.items.length;
+      if (n === 0) {
         statusEl.textContent = "Nenhuma imagem encontrada no documento.";
         statusEl.className = "status warn";
         return;
       }
 
+      // Obtém parágrafo via getRange().paragraphs em vez de pic.paragraph
+      const paras = pics.items.map(pic => pic.getRange().paragraphs.getFirst());
+      paras.forEach(p => p.load("keepWithNext"));
       await context.sync();
-      statusEl.textContent = `✓ "Manter com o próximo" aplicado em ${count} imagem(ns).`;
-      statusEl.className = "status success";
+
+      const antes = paras.map(p => p.keepWithNext);
+      paras.forEach(p => { p.keepWithNext = true; });
+      await context.sync();
+
+      // Lê de volta para confirmar se foi aceito
+      paras.forEach(p => p.load("keepWithNext"));
+      await context.sync();
+      const depois = paras.map(p => p.keepWithNext);
+
+      const confirmadas = depois.filter(v => v === true).length;
+      statusEl.textContent = `${n} imagem(ns). Antes: [${antes}] → Depois: [${depois}]. Confirmadas: ${confirmadas}.`;
+      statusEl.className = confirmadas === n ? "status success" : "status warn";
     });
   } catch (e) {
     statusEl.textContent = "Erro: " + e.message;
