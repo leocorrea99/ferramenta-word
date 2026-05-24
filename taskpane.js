@@ -1,6 +1,7 @@
 /* global Office, Word */
 
 const CM = 28.35; // centimeters to points
+const LAB_VERSION = "24/05 · 13:40";
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
@@ -128,6 +129,9 @@ function showScreen(name) {
   document.getElementById("screen-" + name).classList.remove("hidden");
   document.getElementById("header-title").textContent = TITLES[name] || name;
   document.getElementById("back-btn").classList.toggle("hidden", name === "home");
+  if (name === "lab") {
+    document.getElementById("lab-version").textContent = "Atualizado em " + LAB_VERSION;
+  }
 }
 
 function showHome() {
@@ -260,12 +264,13 @@ async function runLegendasLab() {
       await context.sync();
 
       const placeholders = [];
+      const photosComLegenda = [];
       for (let i = n - 1; i >= 0; i--) {
         const next = nextParas[i];
         if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) continue;
-        pics.items[i].paragraph.keepWithNext = true;
         const ph = pics.items[i].getRange().insertParagraph("__lb__", "After");
         placeholders.push(ph);
+        photosComLegenda.push(pics.items[i]);
       }
       if (placeholders.length === 0) {
         statusEl.textContent = "Todas as imagens já têm legenda.";
@@ -289,6 +294,12 @@ async function runLegendasLab() {
       const ooxml = buildPkgOoxml(prefix, "left", texto);
       for (const ph of placeholders) {
         ph.getRange("Whole").insertOoxml(ooxml, "Replace");
+      }
+      await context.sync();
+
+      // Aplica keepWithNext nas fotos DEPOIS de tudo para garantir que foto e legenda fiquem juntas
+      for (const pic of photosComLegenda) {
+        pic.paragraph.keepWithNext = true;
       }
       await context.sync();
 
