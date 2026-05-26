@@ -1,7 +1,7 @@
 /* global Office, Word */
 
 const CM = 28.35; // centimeters to points
-const LAB_VERSION = "24/05 · 20:15";
+const LAB_VERSION = "24/05 · 21:00";
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
@@ -655,6 +655,55 @@ function buildPkgOoxml(prefix, jc, texto, styleId = "Caption") {
 </pkg:package>`;
 }
 
+// ── Lab: Separa fotos de um mesmo parágrafo em parágrafos individuais ─────────
+
+async function splitMultiPhotoParagraphs(context) {
+  const body = context.document.body;
+  const ooxmlResult = body.getOoxml();
+  await context.sync();
+
+  const W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+  const xmlDoc = new DOMParser().parseFromString(ooxmlResult.value, "application/xml");
+
+  const allParas = Array.from(xmlDoc.getElementsByTagNameNS(W, "p"));
+  let didSplit = false;
+
+  for (const p of allParas) {
+    // Encontra runs que contêm imagem (w:drawing ou w:pict)
+    const drawingRuns = Array.from(p.childNodes).filter(child =>
+      child.nodeType === 1 && child.namespaceURI === W && child.localName === "r" &&
+      (child.getElementsByTagNameNS(W, "drawing").length > 0 ||
+       child.getElementsByTagNameNS(W, "pict").length > 0)
+    );
+    if (drawingRuns.length <= 1) continue;
+
+    // Copia as propriedades do parágrafo original
+    const pPr = Array.from(p.childNodes).find(
+      c => c.nodeType === 1 && c.namespaceURI === W && c.localName === "pPr"
+    );
+
+    // Cria um parágrafo separado para cada imagem
+    const newParas = drawingRuns.map(run => {
+      const newP = xmlDoc.createElementNS(W, "w:p");
+      if (pPr) newP.appendChild(pPr.cloneNode(true));
+      newP.appendChild(run.cloneNode(true));
+      return newP;
+    });
+
+    const parent = p.parentNode;
+    newParas.forEach(np => parent.insertBefore(np, p));
+    parent.removeChild(p);
+    didSplit = true;
+  }
+
+  if (didSplit) {
+    const novoOoxml = new XMLSerializer().serializeToString(xmlDoc);
+    body.insertOoxml(novoOoxml, Word.InsertLocation.replace);
+    await context.sync();
+  }
+  return didSplit;
+}
+
 // ── Lab: Diagnóstico ─────────────────────────────────────────────────────────
 
 async function runDiagnostico() {
@@ -725,7 +774,7 @@ async function runDiagnostico() {
   }
 }
 
-// ── Lab: Legendas (fix fotos anteriores) ─────────────────────────────────────
+// ── Lab: Legendas (fix fotos anteriores + split multi-foto) ──────────────────
 
 async function runLegendasLab() {
   const prefix = radio("xleg-prefix");
@@ -738,6 +787,12 @@ async function runLegendasLab() {
   statusEl.hidden = false;
 
   try {
+    // Fase 0: separa fotos no mesmo parágrafo em parágrafos individuais via OOXML
+    await Word.run(async (context) => {
+      await splitMultiPhotoParagraphs(context);
+    });
+
+    // Fase 1: insere legendas (cada parágrafo agora tem exatamente 1 foto)
     await Word.run(async (context) => {
       const col = scope === "selected"
         ? context.document.getSelection().paragraphs
@@ -746,7 +801,6 @@ async function runLegendasLab() {
       col.load("items");
       await context.sync();
 
-      // Carrega texto e inlinePictures de todos os parágrafos num único sync
       col.items.forEach(p => {
         p.load("text");
         p.inlinePictures.load("items");
@@ -755,29 +809,19 @@ async function runLegendasLab() {
 
       const CAPTION_RE = /^(Foto|Figura)\s+\d+/;
 
-      // Mantém índice de cada parágrafo para varrer os seguintes sem sync extra
       const photoParasInfo = col.items
         .map((p, idx) => ({ p, idx }))
         .filter(({ p }) => p.inlinePictures.items.length > 0);
 
       if (photoParasInfo.length === 0) throw new Error("Nenhuma imagem encontrada.");
 
-      // Insere placeholders em ordem reversa para não deslocar referências
+      // Insere placeholder apenas onde o próximo parágrafo não é já uma legenda
       const placeholders = [];
       for (let i = photoParasInfo.length - 1; i >= 0; i--) {
         const { p: para, idx: paraIdx } = photoParasInfo[i];
-        const numFotos = para.inlinePictures.items.length;
-
-        // Conta legendas já existentes logo abaixo deste parágrafo
-        // (para parágrafos com N fotos: insere apenas N - legendasExistentes)
-        let captionCount = 0;
-        for (let k = paraIdx + 1; k < col.items.length; k++) {
-          if (CAPTION_RE.test(col.items[k].text.trim())) captionCount++;
-          else break;
-        }
-
-        const inserir = Math.max(0, numFotos - captionCount);
-        for (let j = 0; j < inserir; j++) {
+        const hasCaption = paraIdx + 1 < col.items.length &&
+          CAPTION_RE.test(col.items[paraIdx + 1].text.trim());
+        if (!hasCaption) {
           placeholders.push(para.insertParagraph("__lb__", "After"));
         }
       }
@@ -789,7 +833,6 @@ async function runLegendasLab() {
       }
       await context.sync();
 
-      // Aplica estilo Caption/Legenda
       let styleName = "Caption";
       try {
         placeholders.forEach(ph => { ph.style = "Caption"; });
@@ -800,14 +843,12 @@ async function runLegendasLab() {
         await context.sync();
       }
 
-      // Substitui placeholder pelo OOXML com campo SEQ
       const ooxml = buildPkgOoxml(prefix, "left", texto, styleName);
       placeholders.forEach(ph => ph.getRange("Whole").insertOoxml(ooxml, "Replace"));
       await context.sync();
 
       const added = placeholders.length;
-      const totalFotos = photoParasInfo.reduce((sum, { p }) => sum + p.inlinePictures.items.length, 0);
-      const skipped = totalFotos - added;
+      const skipped = photoParasInfo.length - added;
       const msg = skipped > 0
         ? `✓ ${added} legenda(s) adicionada(s) (${skipped} já tinham).`
         : `✓ ${added} legenda(s) adicionada(s).`;
