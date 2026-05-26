@@ -1,7 +1,7 @@
 /* global Office, Word */
 
 const CM = 28.35; // centimeters to points
-const LAB_VERSION = "24/05 · 19:30";
+const LAB_VERSION = "24/05 · 20:15";
 
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
@@ -669,7 +669,6 @@ async function runLegendasLab() {
 
   try {
     await Word.run(async (context) => {
-      // Carrega parágrafos diretamente — evita navegar pic → pic.paragraph
       const col = scope === "selected"
         ? context.document.getSelection().paragraphs
         : context.document.body.paragraphs;
@@ -677,29 +676,40 @@ async function runLegendasLab() {
       col.load("items");
       await context.sync();
 
-      // Carrega texto e imagens de cada parágrafo num único sync
+      // Carrega texto e inlinePictures de todos os parágrafos num único sync
       col.items.forEach(p => {
         p.load("text");
         p.inlinePictures.load("items");
       });
       await context.sync();
 
-      // Filtra parágrafos que contêm ao menos uma imagem
-      const photoParas = col.items.filter(p => p.inlinePictures.items.length > 0);
-      if (photoParas.length === 0) throw new Error("Nenhuma imagem encontrada.");
+      const CAPTION_RE = /^(Foto|Figura)\s+\d+/;
 
-      // Verifica o próximo parágrafo no documento para cada parágrafo com foto
-      const nextParas = photoParas.map(p => p.getNextOrNullObject());
-      nextParas.forEach(np => np.load("text"));
-      await context.sync();
+      // Mantém índice de cada parágrafo para varrer os seguintes sem sync extra
+      const photoParasInfo = col.items
+        .map((p, idx) => ({ p, idx }))
+        .filter(({ p }) => p.inlinePictures.items.length > 0);
 
-      // Insere placeholder apenas onde o próximo parágrafo não é já uma legenda
+      if (photoParasInfo.length === 0) throw new Error("Nenhuma imagem encontrada.");
+
+      // Insere placeholders em ordem reversa para não deslocar referências
       const placeholders = [];
-      for (let i = photoParas.length - 1; i >= 0; i--) {
-        const nextText = nextParas[i].isNullObject ? "" : nextParas[i].text.trim();
-        if (/^(Foto|Figura)\s+\d+/.test(nextText)) continue;
-        const ph = photoParas[i].insertParagraph("__lb__", "After");
-        placeholders.push(ph);
+      for (let i = photoParasInfo.length - 1; i >= 0; i--) {
+        const { p: para, idx: paraIdx } = photoParasInfo[i];
+        const numFotos = para.inlinePictures.items.length;
+
+        // Conta legendas já existentes logo abaixo deste parágrafo
+        // (para parágrafos com N fotos: insere apenas N - legendasExistentes)
+        let captionCount = 0;
+        for (let k = paraIdx + 1; k < col.items.length; k++) {
+          if (CAPTION_RE.test(col.items[k].text.trim())) captionCount++;
+          else break;
+        }
+
+        const inserir = Math.max(0, numFotos - captionCount);
+        for (let j = 0; j < inserir; j++) {
+          placeholders.push(para.insertParagraph("__lb__", "After"));
+        }
       }
 
       if (placeholders.length === 0) {
@@ -726,7 +736,8 @@ async function runLegendasLab() {
       await context.sync();
 
       const added = placeholders.length;
-      const skipped = photoParas.length - added;
+      const totalFotos = photoParasInfo.reduce((sum, { p }) => sum + p.inlinePictures.items.length, 0);
+      const skipped = totalFotos - added;
       const msg = skipped > 0
         ? `✓ ${added} legenda(s) adicionada(s) (${skipped} já tinham).`
         : `✓ ${added} legenda(s) adicionada(s).`;
