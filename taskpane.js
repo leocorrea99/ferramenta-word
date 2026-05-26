@@ -655,6 +655,76 @@ function buildPkgOoxml(prefix, jc, texto, styleId = "Caption") {
 </pkg:package>`;
 }
 
+// ── Lab: Diagnóstico ─────────────────────────────────────────────────────────
+
+async function runDiagnostico() {
+  const statusEl = document.getElementById("status-diagnostico");
+  const outputEl = document.getElementById("output-diagnostico");
+  statusEl.textContent = "Lendo documento...";
+  statusEl.className = "status info";
+  statusEl.hidden = false;
+  outputEl.style.display = "none";
+
+  try {
+    await Word.run(async (context) => {
+      const col = context.document.body.paragraphs;
+      col.load("items");
+      await context.sync();
+
+      col.items.forEach(p => {
+        p.load("text");
+        p.inlinePictures.load("items");
+      });
+      await context.sync();
+
+      const CAPTION_RE = /^(Foto|Figura)\s+\d+/;
+      const lines = [`Total de parágrafos no body: ${col.items.length}`, ""];
+
+      for (let idx = 0; idx < col.items.length; idx++) {
+        const p = col.items[idx];
+        const numFotos = p.inlinePictures.items.length;
+        const txt = p.text.trim();
+        const isCaption = CAPTION_RE.test(txt);
+
+        if (numFotos > 0 || isCaption || txt.length > 0) {
+          let tipo = "texto";
+          if (numFotos > 0) tipo = `📷 ${numFotos} foto(s)`;
+          if (isCaption)    tipo = `🏷 legenda`;
+          if (numFotos > 0 && isCaption) tipo = `📷+🏷`;
+
+          const preview = txt.length > 40 ? txt.slice(0, 40) + "…" : (txt || "(vazio)");
+          lines.push(`[${idx}] ${tipo} — "${preview}"`);
+        }
+      }
+
+      lines.push("");
+      lines.push("── O que a ferramenta vai fazer ──");
+      const photoParasInfo = col.items
+        .map((p, idx) => ({ p, idx }))
+        .filter(({ p }) => p.inlinePictures.items.length > 0);
+
+      for (const { p: para, idx: paraIdx } of photoParasInfo) {
+        const numFotos = para.inlinePictures.items.length;
+        let captionCount = 0;
+        for (let k = paraIdx + 1; k < col.items.length; k++) {
+          if (CAPTION_RE.test(col.items[k].text.trim())) captionCount++;
+          else break;
+        }
+        const inserir = Math.max(0, numFotos - captionCount);
+        lines.push(`Parágrafo [${paraIdx}]: ${numFotos} foto(s), ${captionCount} legenda(s) existente(s) → inserir ${inserir}`);
+      }
+
+      outputEl.textContent = lines.join("\n");
+      outputEl.style.display = "block";
+      statusEl.textContent = `✓ ${photoParasInfo.length} parágrafo(s) com foto encontrado(s).`;
+      statusEl.className = "status success";
+    });
+  } catch (e) {
+    statusEl.textContent = "Erro: " + e.message;
+    statusEl.className = "status error";
+  }
+}
+
 // ── Lab: Legendas (fix fotos anteriores) ─────────────────────────────────────
 
 async function runLegendasLab() {

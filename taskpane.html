@@ -289,6 +289,14 @@
 <div id="screen-legendas-lab" class="screen hidden">
 
   <div class="card">
+    <div class="card-title">🔍 Diagnóstico</div>
+    <p class="hint">Mostra o que o código enxerga no documento antes de inserir legendas.</p>
+    <button class="btn" style="background:#555;color:#fff;margin-top:4px" onclick="runDiagnostico()">Rodar Diagnóstico</button>
+    <div id="status-diagnostico" class="status" hidden></div>
+    <pre id="output-diagnostico" style="font-size:10px;white-space:pre-wrap;background:#1a1a1a;color:#ccc;padding:8px;border-radius:6px;margin-top:8px;max-height:200px;overflow-y:auto;display:none"></pre>
+  </div>
+
+  <div class="card">
     <div class="card-title">Passo 1 — Adicionar legendas</div>
 
     <div class="card-title">Prefixo</div>
