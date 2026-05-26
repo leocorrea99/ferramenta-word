@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LaudoBot Automações — Suplemento Word</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; color: #1e293b; background: #fff; overflow-x: hidden; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(8, 12, 28, 0.9); backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      height: 60px; padding: 0 48px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; gap: 11px; text-decoration: none; }
+    .logo img { width: 34px; height: 34px; border-radius: 8px; object-fit: contain; }
+    .logo-name { font-size: 16px; font-weight: 800; color: white; letter-spacing: -0.01em; }
+    .logo-name span { color: #60a5fa; }
+    .nav-btn {
+      background: #2563eb; color: white; font-size: 13px; font-weight: 700;
+      padding: 8px 20px; border-radius: 8px; text-decoration: none;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .nav-btn:hover { background: #1d4ed8; transform: translateY(-1px); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      background: #080c1c;
+      background-image:
+        radial-gradient(ellipse 70% 70% at 65% 50%, rgba(37,99,235,0.25) 0%, transparent 65%),
+        radial-gradient(ellipse 40% 60% at 10% 80%, rgba(99,102,241,0.12) 0%, transparent 55%);
+      position: relative; overflow: hidden;
+      display: flex; align-items: center;
+      padding: 100px 60px 70px; gap: 60px;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(37,99,235,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37,99,235,0.04) 1px, transparent 1px);
+      background-size: 56px 56px;
+    }
+    .hero-text { flex: 0 0 460px; position: relative; z-index: 2; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: rgba(37,99,235,0.15); border: 1px solid rgba(37,99,235,0.4);
+      color: #93c5fd; font-size: 11px; font-weight: 700;
+      padding: 5px 14px; border-radius: 20px;
+      letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: 50px; font-weight: 900; line-height: 1.06;
+      color: white; letter-spacing: -0.03em; margin-bottom: 20px;
+    }
+    .hero h1 em { font-style: normal; color: #60a5fa; }
+    .hero-desc { font-size: 17px; color: #94a3b8; line-height: 1.7; margin-bottom: 40px; max-width: 380px; }
+    .hero-ctas { display: flex; flex-direction: column; gap: 16px; max-width: 420px; }
+
+    .install-card {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px; padding: 16px 18px;
+    }
+    .install-card-label {
+      font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.45);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+    }
+    .cmd-row { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.35); border-radius: 7px; padding: 9px 12px; }
+    .cmd-text { font-family: "SF Mono","Fira Code",monospace; font-size: 11px; color: #86efac; flex: 1; word-break: break-all; }
+    .btn-copy {
+      background: rgba(255,255,255,0.12); border: none; border-radius: 5px;
+      padding: 5px 10px; font-size: 11px; font-weight: 600; color: white;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background 0.15s;
+    }
+    .btn-copy:hover { background: rgba(255,255,255,0.22); }
+    .install-hint { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 9px; line-height: 1.6; }
+
+    .btn-win-download {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px; padding: 14px 18px; text-decoration: none;
+      transition: background 0.15s, transform 0.15s, box-shadow 0.15s; color: white;
+    }
+    .btn-win-download:hover { background: rgba(255,255,255,0.11); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .btn-win-icon { font-size: 28px; }
+    .btn-win-txt { display: flex; flex-direction: column; }
+    .btn-win-title { font-size: 14px; font-weight: 700; }
+    .btn-win-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+
+    /* ── HERO VISUAL ── */
+    .hero-visual { flex: 1; display: flex; justify-content: flex-end; align-items: center; position: relative; z-index: 2; }
+    .mockup {
+      width: 560px;
+      background: #1c1f2e; border-radius: 14px; overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.07), 0 48px 100px rgba(0,0,0,0.7), 0 0 80px rgba(37,99,235,0.1);
+      transform: perspective(1200px) rotateY(-10deg) rotateX(3deg);
+      transform-origin: right center; transition: transform 0.4s ease;
+    }
+    .mockup:hover { transform: perspective(1200px) rotateY(-5deg) rotateX(1.5deg); }
+    .m-bar { background: #13161f; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+    .m-dots { display: flex; gap: 6px; }
+    .m-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .m-dot.r { background: #ff5f57; } .m-dot.y { background: #febc2e; } .m-dot.g { background: #28c840; }
+    .m-title { flex: 1; text-align: center; font-size: 11px; color: #4b5563; }
+    .m-ribbon { background: #f0f1f4; height: 24px; display: flex; align-items: center; padding: 0 8px; border-bottom: 1px solid #d4d7de; }
+    .m-tab { font-size: 9px; padding: 0 8px; height: 100%; display: flex; align-items: center; color: #374151; }
+    .m-tab.on { color: #2563eb; font-weight: 700; border-bottom: 2px solid #2563eb; background: white; }
+    .m-body { display: flex; height: 290px; background: #c5c9d1; gap: 1px; }
+    .m-doc { flex: 1; background: #dde1e7; display: flex; justify-content: center; padding: 12px 10px; overflow: hidden; }
+    .m-page { background: white; width: 100%; max-width: 230px; box-shadow: 0 1px 5px rgba(0,0,0,0.15); padding: 16px; }
+    .mp-title { height: 6px; background: #1e293b; border-radius: 2px; width: 55%; margin: 0 auto 12px; }
+    .mp-line { height: 3.5px; background: #e2e8f0; border-radius: 1px; margin-bottom: 5px; }
+    .mp-line.s { width: 68%; }
+    .mp-img { height: 48px; margin: 8px 0 0; background: linear-gradient(135deg, #dbeafe, #bfdbfe); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid #c3dafd; }
+    .mp-cap { height: 3px; background: #94a3b8; border-radius: 1px; width: 42%; margin: 5px auto 10px; }
+    .m-pane { width: 126px; background: white; display: flex; flex-direction: column; overflow: hidden; }
+    .mp-hdr { background: #2563eb; padding: 9px 10px; }
+    .mp-hdr-logo { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+    .mp-hdr-logo img { width: 16px; height: 16px; border-radius: 3px; object-fit: contain; }
+    .mp-hdr-t { font-size: 8.5px; font-weight: 800; color: white; }
+    .mp-hdr-s { font-size: 6.5px; color: #bfdbfe; margin-top: 2px; }
+    .mp-dbar { padding: 5px 8px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 4px; }
+    .mp-dname { font-size: 6.5px; color: #475569; font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mp-dbadge { background: #eff6ff; color: #2563eb; font-size: 5.5px; font-weight: 700; padding: 1px 5px; border-radius: 8px; }
+    .mp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 5px; }
+    .mp-card { background: white; border: 1px solid #e2e8f0; border-radius: 4px; padding: 5px 3px 4px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .mp-em { font-size: 11px; }
+    .mp-lbl { font-size: 5.5px; font-weight: 700; color: #374151; }
+
+    /* ── FEATURES ── */
+    .feats-section { padding: 90px 48px; background: #f8fafc; }
+    .s-hdr { text-align: center; margin-bottom: 52px; }
+    .s-label { font-size: 11px; font-weight: 700; color: #2563eb; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+    .s-title { font-size: 34px; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; }
+    .s-sub { font-size: 16px; color: #64748b; margin-top: 12px; line-height: 1.55; max-width: 520px; margin-left: auto; margin-right: auto; }
+    .feats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto; }
+    .feat {
+      background: white; border: 1.5px solid #e2e8f0; border-radius: 14px;
+      padding: 30px 24px; transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    }
+    .feat:hover { border-color: #93c5fd; box-shadow: 0 6px 24px rgba(37,99,235,0.1); transform: translateY(-3px); }
+    .feat-icon { font-size: 32px; display: block; margin-bottom: 16px; }
+    .feat h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: #0f172a; }
+    .feat p { font-size: 13.5px; color: #64748b; line-height: 1.65; }
+
+    /* ── TUTORIAL ── */
+    .tutorial-section { padding: 90px 48px; background: white; }
+    .tutorial-wrap { max-width: 860px; margin: 0 auto; }
+    .os-tabs { display: flex; gap: 0; border: 1.5px solid #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 36px; max-width: 320px; }
+    .os-tab {
+      flex: 1; padding: 11px 18px; font-size: 14px; font-weight: 700;
+      background: white; color: #64748b; cursor: pointer; border: none;
+      transition: background 0.15s, color 0.15s; text-align: center;
+    }
+    .os-tab.active { background: #2563eb; color: white; }
+    .os-panel { display: none; }
+    .os-panel.active { display: block; }
+
+    .tut-steps { display: flex; flex-direction: column; gap: 0; }
+    .tut-step {
+      display: flex; gap: 20px; padding: 24px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .tut-step:last-child { border-bottom: none; }
+    .tut-num {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      background: #eff6ff; color: #2563eb; font-size: 16px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .tut-body { flex: 1; }
+    .tut-body h3 { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+    .tut-body p { font-size: 14px; color: #475569; line-height: 1.65; }
+    .tut-body p strong { color: #0f172a; }
+
+    .cmd-block {
+      background: #0f172a; border-radius: 10px; padding: 16px 18px;
+      margin-top: 14px; display: flex; align-items: center; gap: 10px;
+    }
+    .cmd-block code { font-family: "SF Mono","Fira Code",monospace; font-size: 12.5px; color: #86efac; flex: 1; word-break: break-all; }
+    .btn-copy-dark {
+      background: rgba(255,255,255,0.1); border: none; border-radius: 6px;
+      padding: 6px 12px; font-size: 11px; font-weight: 700; color: white;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background 0.15s;
+    }
+    .btn-copy-dark:hover { background: rgba(255,255,255,0.2); }
+
+    .warn-box {
+      background: #fefce8; border: 1px solid #fde68a; border-radius: 8px;
+      padding: 12px 15px; margin-top: 12px; font-size: 13px; color: #92400e; line-height: 1.55;
+    }
+    .warn-box strong { color: #78350f; }
+
+    .btn-download-primary {
+      display: inline-flex; align-items: center; gap: 10px; margin-top: 16px;
+      background: #2563eb; color: white; font-size: 14px; font-weight: 700;
+      padding: 12px 22px; border-radius: 9px; text-decoration: none;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .btn-download-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+
+    /* ── CTA ── */
+    .cta-section {
+      background: #080c1c;
+      background-image: radial-gradient(ellipse 60% 70% at 50% 100%, rgba(37,99,235,0.22) 0%, transparent 60%);
+      padding: 90px 48px; text-align: center;
+    }
+    .cta-logo { width: 64px; height: 64px; border-radius: 16px; object-fit: contain; margin: 0 auto 20px; display: block; }
+    .cta-section h2 { font-size: 38px; font-weight: 900; color: white; margin-bottom: 14px; letter-spacing: -0.025em; }
+    .cta-section p { color: #94a3b8; font-size: 16px; margin-bottom: 40px; line-height: 1.6; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .cta-cards { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+    .cta-card {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px; padding: 24px 28px; min-width: 280px; max-width: 360px; text-align: left;
+    }
+    .cta-card-label {
+      font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.4);
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* ── FOOTER ── */
+    footer { background: #050810; border-top: 1px solid rgba(255,255,255,0.05); padding: 28px; text-align: center; }
+    footer p { font-size: 12.5px; color: #334155; }
+    footer a { color: #475569; text-decoration: none; }
+    footer a:hover { color: #94a3b8; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1000px) {
+      .hero { flex-direction: column; padding: 100px 32px 70px; gap: 50px; }
+      .hero-text { flex: none; }
+      .mockup { transform: none; width: 100%; max-width: 500px; }
+      .hero-visual { justify-content: center; width: 100%; }
+    }
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 34px; }
+      .hero-text { flex: none; }
+      nav { padding: 0 20px; }
+      .feats-section, .tutorial-section, .cta-section { padding: 60px 20px; }
+      .cta-section h2 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">
+    <img src="https://laudobot.com.br/images/laudobot.png" alt="LaudoBot" />
+    <span class="logo-name">LaudoBot <span>Automações</span></span>
+  </a>
+  <a class="nav-btn" href="#download">Baixar agora</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-text">
+    <span class="hero-badge">✦ Suplemento para Microsoft Word</span>
+    <h1>Automatize seu<br><em>laudo</em> no Word</h1>
+    <p class="hero-desc">Adicione legendas, redimensione e formate imagens em segundos — direto no Word, sem sair do documento.</p>
+
+    <div class="hero-ctas">
+      <!-- Mac -->
+      <div class="install-card">
+        <div class="install-card-label">&#63743; Mac — Terminal</div>
+        <div class="cmd-row">
+          <span class="cmd-text" id="cmd-hero">bash &lt;(curl -sL https://leocorrea99.github.io/ferramenta-word/instalar-mac.command)</span>
+          <button class="btn-copy" onclick="copyCmd('cmd-hero',this)">Copiar</button>
+        </div>
+        <p class="install-hint">Abra o Terminal (⌘ + Espaço → "Terminal"), cole o comando e pressione Enter.</p>
+      </div>
+
+      <!-- Windows -->
+      <a class="btn-win-download" href="instalar-windows.bat" download>
+        <span class="btn-win-icon">⊞</span>
+        <span class="btn-win-txt">
+          <span class="btn-win-title">Baixar para Windows</span>
+          <span class="btn-win-sub">Arquivo .bat — clique duas vezes para instalar</span>
+        </span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Mockup -->
+  <div class="hero-visual">
+    <div class="mockup">
+      <div class="m-bar">
+        <div class="m-dots"><span class="m-dot r"></span><span class="m-dot y"></span><span class="m-dot g"></span></div>
+        <span class="m-title">Laudo_Pericial.docx — Word</span>
+      </div>
+      <div class="m-ribbon">
+        <span class="m-tab">Arquivo</span><span class="m-tab">Início</span>
+        <span class="m-tab on">Inserir</span><span class="m-tab">Layout</span>
+        <span class="m-tab">Referências</span>
+      </div>
+      <div class="m-body">
+        <div class="m-doc">
+          <div class="m-page">
+            <div class="mp-title"></div>
+            <div class="mp-line"></div><div class="mp-line s"></div><div class="mp-line"></div>
+            <div class="mp-img">📷</div>
+            <div class="mp-cap"></div>
+            <div class="mp-line"></div><div class="mp-line s"></div><div class="mp-line"></div>
+            <div class="mp-img">🏗️</div>
+            <div class="mp-cap"></div>
+            <div class="mp-line"></div><div class="mp-line s"></div>
+          </div>
+        </div>
+        <div class="m-pane">
+          <div class="mp-hdr">
+            <div class="mp-hdr-logo">
+              <img src="https://laudobot.com.br/images/laudobot.png" alt="" />
+              <span class="mp-hdr-t">LaudoBot</span>
+            </div>
+            <div class="mp-hdr-s">Automações · Pronto</div>
+          </div>
+          <div class="mp-dbar">
+            <span class="mp-dname">Laudo_Pericial.docx</span>
+            <span class="mp-dbadge">4 imgs</span>
+          </div>
+          <div class="mp-grid">
+            <div class="mp-card"><span class="mp-em">🏷️</span><span class="mp-lbl">Legendas</span></div>
+            <div class="mp-card"><span class="mp-em">📐</span><span class="mp-lbl">Redimensionar</span></div>
+            <div class="mp-card"><span class="mp-em">¶</span><span class="mp-lbl">Parágrafo</span></div>
+            <div class="mp-card"><span class="mp-em">↔</span><span class="mp-lbl">Recuo</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="feats-section">
+  <div class="s-hdr">
+    <p class="s-label">Funcionalidades</p>
+    <h2 class="s-title">Tudo que você precisa no laudo</h2>
+    <p class="s-sub">Quatro ferramentas especializadas para formatação de imagens em documentos Word.</p>
+  </div>
+  <div class="feats-grid">
+    <div class="feat">
+      <span class="feat-icon">🏷️</span>
+      <h3>Legendas automáticas</h3>
+      <p>Adiciona legendas numeradas em sequência com campo SEQ. Prefixo "Foto" ou "Figura", texto adicional e alinhamento configuráveis. Imagens que já têm legenda são ignoradas automaticamente.</p>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">📐</span>
+      <h3>Redimensionar</h3>
+      <p>Ajuste largura e altura em centímetros com precisão. Mantém proporção ao preencher apenas um lado, ou aplica dimensões exatas quando ambos são informados.</p>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">¶</span>
+      <h3>Parágrafo</h3>
+      <p>Configure alinhamento, recuos, espaço antes e depois, e espaçamento entre linhas de todos os parágrafos de imagem em uma única operação.</p>
+    </div>
+    <div class="feat">
+      <span class="feat-icon">↔️</span>
+      <h3>Recuo</h3>
+      <p>Aplique recuo de primeira linha com valor configurável em centímetros ou remova todos os recuos. Rápido e consistente em todo o documento.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TUTORIAL -->
+<section class="tutorial-section" id="tutorial">
+  <div class="tutorial-wrap">
+    <div class="s-hdr" style="text-align:left; margin-bottom:32px;">
+      <p class="s-label">Instalação</p>
+      <h2 class="s-title">Como instalar</h2>
+      <p class="s-sub" style="margin-left:0; margin-right:0;">Escolha o seu sistema operacional e siga o passo a passo.</p>
+    </div>
+
+    <div class="os-tabs">
+      <button class="os-tab active" onclick="switchOS('mac')">&#63743; Mac</button>
+      <button class="os-tab" onclick="switchOS('win')">⊞ Windows</button>
+    </div>
+
+    <!-- MAC -->
+    <div class="os-panel active" id="panel-mac">
+      <div class="tut-steps">
+        <div class="tut-step">
+          <div class="tut-num">1</div>
+          <div class="tut-body">
+            <h3>Abra o Terminal</h3>
+            <p>Pressione <strong>⌘ + Espaço</strong>, digite <strong>Terminal</strong> e pressione Enter.</p>
+          </div>
+        </div>
+        <div class="tut-step">
+          <div class="tut-num">2</div>
+          <div class="tut-body">
+            <h3>Cole e execute o comando</h3>
+            <p>Copie o comando abaixo, cole no Terminal e pressione Enter. O instalador vai fazer tudo automaticamente.</p>
+            <div class="cmd-block">
+              <code id="cmd-tut">bash &lt;(curl -sL https://leocorrea99.github.io/ferramenta-word/instalar-mac.command)</code>
+              <button class="btn-copy-dark" onclick="copyCmd('cmd-tut',this)">Copiar</button>
+            </div>
+          </div>
+        </div>
+        <div class="tut-step">
+          <div class="tut-num">3</div>
+          <div class="tut-body">
+            <h3>Abra o Word e ative o suplemento</h3>
+            <p>Abra o Microsoft Word, vá em <strong>Inserir → Suplementos → Meus Suplementos</strong> e clique em <strong>LaudoBot Automações</strong> para abrir o painel lateral.</p>
+          </div>
+        </div>
+        <div class="tut-step">
+          <div class="tut-num">4</div>
+          <div class="tut-body">
+            <h3>Faça login</h3>
+            <p>Insira seu e-mail e senha cadastrados no LaudoBot. O painel estará pronto para uso.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WINDOWS -->
+    <div class="os-panel" id="panel-win">
+      <div class="tut-steps">
+        <div class="tut-step">
+          <div class="tut-num">1</div>
+          <div class="tut-body">
+            <h3>Baixe o instalador</h3>
+            <p>Clique no botão abaixo para baixar o arquivo de instalação.</p>
+            <a class="btn-download-primary" href="instalar-windows.bat" download>⬇ Baixar instalador (.bat)</a>
+          </div>
+        </div>
+        <div class="tut-step">
+          <div class="tut-num">2</div>
+          <div class="tut-body">
+            <h3>Execute o instalador</h3>
+            <p>Clique duas vezes no arquivo <strong>instalar-windows.bat</strong> que foi baixado. O instalador vai configurar tudo automaticamente.</p>
+            <div class="warn-box">
+              <strong>Aviso do Windows Defender?</strong> Isso é normal. Clique em <strong>"Mais informações"</strong> e depois em <strong>"Executar mesmo assim"</strong> para continuar.
+            </div>
+          </div>
+        </div>
+        <div class="tut-step">
+          <div class="tut-num">3</div>
+          <div class="tut-body">
+            <h3>Abra o Word e ative o suplemento</h3>
+            <p>Abra o Microsoft Word, vá em <strong>Inserir → Suplementos → Meus Suplementos</strong> e clique em <strong>LaudoBot Automações</strong> para abrir o painel lateral.</p>
+          </div>
+        </div>
+        <div class="tut-step">
+          <div class="tut-num">4</div>
+          <div class="tut-body">
+            <h3>Faça login</h3>
+            <p>Insira seu e-mail e senha cadastrados no LaudoBot. O painel estará pronto para uso.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA / DOWNLOAD -->
+<section class="cta-section" id="download">
+  <img class="cta-logo" src="https://laudobot.com.br/images/laudobot.png" alt="LaudoBot" />
+  <h2>Pronto para automatizar?</h2>
+  <p>Instale o LaudoBot Automações e ganhe tempo em cada laudo.</p>
+
+  <div class="cta-cards">
+    <!-- Mac card -->
+    <div class="cta-card">
+      <div class="cta-card-label">&#63743; Mac — Terminal</div>
+      <div class="cmd-row">
+        <span class="cmd-text" id="cmd-cta">bash &lt;(curl -sL https://leocorrea99.github.io/ferramenta-word/instalar-mac.command)</span>
+        <button class="btn-copy" onclick="copyCmd('cmd-cta',this)">Copiar</button>
+      </div>
+      <p style="font-size:11px; color:rgba(255,255,255,0.35); margin-top:10px; line-height:1.6;">
+        Abra o Terminal (⌘ + Espaço → "Terminal"), cole e pressione Enter.
+      </p>
+    </div>
+
+    <!-- Windows card -->
+    <div class="cta-card">
+      <div class="cta-card-label">⊞ Windows</div>
+      <a class="btn-win-download" href="instalar-windows.bat" download style="border-color:rgba(255,255,255,0.2);">
+        <span class="btn-win-icon">⬇</span>
+        <span class="btn-win-txt">
+          <span class="btn-win-title">Baixar instalador</span>
+          <span class="btn-win-sub">instalar-windows.bat</span>
+        </span>
+      </a>
+      <p style="font-size:11px; color:rgba(255,255,255,0.35); margin-top:10px; line-height:1.6;">
+        Clique duas vezes no arquivo para instalar. Se aparecer aviso do Windows: <em>"Mais informações" → "Executar mesmo assim"</em>.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>LaudoBot Automações &copy; 2025 &nbsp;·&nbsp; <a href="https://laudobot.com.br">laudobot.com.br</a></p>
+</footer>
+
+<script>
+  function copyCmd(id, btn) {
+    const raw = document.getElementById(id).textContent;
+    const text = raw.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = 'Copiado!';
+      setTimeout(() => btn.textContent = orig, 2000);
+    });
+  }
+
+  function switchOS(os) {
+    document.querySelectorAll('.os-tab').forEach((t, i) => {
+      t.classList.toggle('active', (os === 'mac' && i === 0) || (os === 'win' && i === 1));
+    });
+    document.getElementById('panel-mac').classList.toggle('active', os === 'mac');
+    document.getElementById('panel-win').classList.toggle('active', os === 'win');
+  }
+</script>
+</body>
+</html>
