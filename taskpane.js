@@ -201,25 +201,44 @@ async function runLegendas() {
   statusEl.hidden = false;
 
   try {
+    // Fase 0: separa fotos no mesmo parágrafo em parágrafos individuais via OOXML
     await Word.run(async (context) => {
-      const pics = getPics(context, scope);
-      pics.load("items");
+      await splitMultiPhotoParagraphs(context);
+    });
+
+    // Fase 1: insere legendas (cada parágrafo agora tem exatamente 1 foto)
+    await Word.run(async (context) => {
+      const col = scope === "selected"
+        ? context.document.getSelection().paragraphs
+        : context.document.body.paragraphs;
+
+      col.load("items");
       await context.sync();
 
-      const n = pics.items.length;
-      if (n === 0) throw new Error("Nenhuma imagem encontrada.");
-
-      const nextParas = pics.items.map(pic => pic.paragraph.getNextOrNullObject());
-      nextParas.forEach(p => p.load("text"));
+      col.items.forEach(p => {
+        p.load("text");
+        p.inlinePictures.load("items");
+      });
       await context.sync();
+
+      const CAPTION_RE = /^(Foto|Figura)\s+\d+/;
+
+      const photoParasInfo = col.items
+        .map((p, idx) => ({ p, idx }))
+        .filter(({ p }) => p.inlinePictures.items.length > 0);
+
+      if (photoParasInfo.length === 0) throw new Error("Nenhuma imagem encontrada.");
 
       const placeholders = [];
-      for (let i = n - 1; i >= 0; i--) {
-        const next = nextParas[i];
-        if (!next.isNullObject && /^(Foto|Figura)\s+\d+/.test(next.text.trim())) continue;
-        const ph = pics.items[i].getRange().insertParagraph("__lb__", "After");
-        placeholders.push(ph);
+      for (let i = photoParasInfo.length - 1; i >= 0; i--) {
+        const { p: para, idx: paraIdx } = photoParasInfo[i];
+        const hasCaption = paraIdx + 1 < col.items.length &&
+          CAPTION_RE.test(col.items[paraIdx + 1].text.trim());
+        if (!hasCaption) {
+          placeholders.push(para.insertParagraph("__lb__", "After"));
+        }
       }
+
       if (placeholders.length === 0) {
         statusEl.textContent = "Todas as imagens já têm legenda.";
         statusEl.className = "status warn";
@@ -229,22 +248,20 @@ async function runLegendas() {
 
       let styleName = "Caption";
       try {
-        for (const ph of placeholders) { ph.style = "Caption"; }
+        placeholders.forEach(ph => { ph.style = "Caption"; });
         await context.sync();
       } catch {
         styleName = "Legenda";
-        for (const ph of placeholders) { ph.style = "Legenda"; }
+        placeholders.forEach(ph => { ph.style = "Legenda"; });
         await context.sync();
       }
 
       const ooxml = buildPkgOoxml(prefix, "left", texto, styleName);
-      for (const ph of placeholders) {
-        ph.getRange("Whole").insertOoxml(ooxml, "Replace");
-      }
+      placeholders.forEach(ph => ph.getRange("Whole").insertOoxml(ooxml, "Replace"));
       await context.sync();
 
       const added = placeholders.length;
-      const skipped = n - added;
+      const skipped = photoParasInfo.length - added;
       const msg = skipped > 0
         ? `✓ ${added} legenda(s) adicionada(s) (${skipped} já tinham).`
         : `✓ ${added} legenda(s) adicionada(s).`;
